@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Video Downloader</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar Section -->
+    <header class="navbar">
+        <nav class="nav-links">
+            <button class="nav-btn btn-3d active">Home</button>
+            <button class="nav-btn btn-3d">History</button>
+            <button class="nav-btn btn-3d">Settings</button>
+            <button class="nav-btn btn-3d">About</button>
+            <button class="nav-btn btn-3d">Connect US</button>
+        </nav>
+        <span id="user-id-display" class="user-id">Guest_...</span>
+            
+            <div class="credits btn-3d" title="Watch Ads to Earn Credits">
+            <!-- Credit Display -->
+            <div class="credits" title="Watch Ads to Earn Credits">
+                <i class="fa-solid fa-coins"></i> <span id="credit-count">50</span> Credits
+                <button id="earn-credits-btn" class="earn-btn">+</button>
+            </div>
+            <!-- Theme Toggle -->
+            <button id="theme-toggle"><i class="fa-solid fa-moon"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Home Section -->
+    <main class="container">
+        <h1>Download Any Video Instantly</h1>
+        <p>Support for YT, TikTok, Insta, FB & more!</p>
+
+        <!-- Input Section -->
+        <div class="input-group">
+            <input type="url" id="video-url" placeholder="Paste your video link here..." autocomplete="off">
+            <button id="process-btn" class="btn-3d primary-action">Download Video</button>
+        </div>
+
+        <!-- Offline & Data Saver Options (Hidden by default, shown after fetching) -->
+        <div id="download-options" class="hidden">
+            <div class="video-preview">
+                <img src="placeholder-thumbnail.jpg" alt="Video Thumbnail" id="video-thumbnail">
+                <h3 id="video-title">Video Title Will Appear Here</h3>
+            </div>
+            
+            <div class="action-cards">
+                <!-- Standard Download -->
+                <div class="card">
+                    <h4>Standard Download</h4>
+                    <p>Fastest direct download. Uses standard internet data based on video size.</p>
+                    <button class="download-btn normal-btn">Download Now</button>
+                </div>
+
+               <div class="card premium">
+    <h4>Data Saver (1080p)</h4>
+    <p>Smart background compression. Keeps HD quality while saving maximum mobile data.</p>
+    <button id="data-saver-btn" class="download-btn credit-btn">Use 10 Credits</button>
+</div>
+
+                <!-- Offline Queue (Credit System) -->
+                <div class="card offline">
+                    <h4>Offline Auto-Download</h4>
+                    <p>No connection? Add link to here. It auto-downloads in the background when internet returns.</p>
+                    <button class="download-btn offline-btn" id="offline-queue-btn">Use 20 Credit & Queue</button>
+                </div>
+            </div>
+        </div>
+        <div id="custom-alert" class="modal hidden">
+            <div class="modal-content">
+                <p id="alert-message">Message goes here</p>
+                <button id="close-alert" class="btn-3d">OK</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

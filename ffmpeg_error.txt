@@ -1,0 +1,74 @@
+FFMPEG ERROR:
+ffmpeg version 8.0.1-essentials_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+  built with gcc 15.2.0 (Rev8, Built by MSYS2 project)
+  configuration: --enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-fontconfig --enable-iconv --enable-gnutls --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-zlib --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-sdl2 --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxvid --enable-libaom --enable-libopenjpeg --enable-libvpx --enable-mediafoundation --enable-libass --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-openal --enable-libgme --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libtheora --enable-libvo-amrwbenc --enable-libgsm --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-librubberband
+  libavutil      60.  8.100 / 60.  8.100
+  libavcodec     62. 11.100 / 62. 11.100
+  libavformat    62.  3.100 / 62.  3.100
+  libavdevice    62.  1.100 / 62.  1.100
+  libavfilter    11.  4.100 / 11.  4.100
+  libswscale      9.  1.100 /  9.  1.100
+  libswresample   6.  1.100 /  6.  1.100
+[Parsed_scale2ref_0 @ 00000229ebfbae80] scale2ref is deprecated, use scale=rw:rh instead
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'https://rr1---sn-uxn23-pnce.googlevideo.com/videoplayback?expire=1780495401&ei=yd8favGZI6eXvdIPhuL0iAY&ip=154.57.195.136&id=o-APHItkJXkPGu1_G4TD5H-VbpaW6fUXp1fDV-_q-rtrd3&itag=18&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=180&met=1780473801%2C&mh=Vo&mm=31%2C29&mn=sn-uxn23-pnce%2Csn-2o4wg5-5j&ms=au%2Crdu&mv=m&mvi=1&pl=24&rms=au%2Cau&initcwndbps=427500&bui=AbKmrwqkIjyU_zhrCkaybBK5p_Rp0u2NBSdD2c7TN9xEKIuSf7rE1ryjFgksKrord8wJTd9ZtxQ-y4QE&spc=96Xrvxo83lpE8UiPNidp90QL5B1ZzPhXVpDF3f9Kir3BvQErV2NH&vprv=1&svpuc=1&mime=video%2Fmp4&rqh=1&cnr=14&ratebypass=yes&dur=104.489&lmt=1746523004039654&mt=1780473186&fvip=2&fexp=51565116%2C51565682&c=ANDROID_VR&txp=5319224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Ccnr%2Cratebypass%2Cdur%2Clmt&sig=AHEqNM4wRgIhAJXOzR54I2ehIyJHSNW5yh0CVuXFcYUBkI8lHsT-ZMrlAiEA-qSGKROIOwUnT-ZZsZBHIPlUZs433zJ49RAQ3IXOBLw%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgB5JLN27OWTeqnK5tJMmItEWVjwx9m_CXoOeuBR5mLxYCIQDv1RB32jF-emZBPRo-kQhSWDeFyqCn2SWENvs2u8JH5A%3D%3D':
+  Metadata:
+    major_brand     : mp42
+    minor_version   : 0
+    compatible_brands: isommp42
+    creation_time   : 2025-05-06T09:16:25.000000Z
+    encoder         : Google
+  Duration: 00:01:44.42, start: 0.000000, bitrate: 346 kb/s
+  Stream #0:0[0x1](und): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 640x360 [SAR 1:1 DAR 16:9], 215 kb/s, 29.97 fps, 29.97 tbr, 30k tbn (default)
+    Metadata:
+      creation_time   : 2025-05-06T09:16:25.000000Z
+      handler_name    : ISO Media file produced by Google Inc. Created on: 05/06/2025.
+      vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s (default)
+    Metadata:
+      creation_time   : 2025-05-06T09:16:25.000000Z
+      handler_name    : ISO Media file produced by Google Inc. Created on: 05/06/2025.
+      vendor_id       : [0][0][0][0]
+Input #1, mov,mp4,m4a,3gp,3g2,mj2, from 'C:\Users\admin\Desktop\all vifeo downloader\assets\outro.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    creation_time   : 2026-06-02T18:24:56.000000Z
+    date            : UTC 2026-06-02 18:28:17
+    encoder         : Lavf58.76.100
+    location-eng    : +00.0000+000.0000/
+    location        : +00.0000+000.0000/
+  Duration: 00:00:06.66, start: 0.000000, bitrate: 4882 kb/s
+  Stream #1:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 572x1280, 4792 kb/s, SAR 1:1 DAR 143:320, 30 fps, 30 tbr, 90k tbn (default)
+    Metadata:
+      creation_time   : 2026-06-02T18:24:56.000000Z
+      handler_name    : VideoHandler
+      vendor_id       : [0][0][0][0]
+  Stream #1:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 127 kb/s (default)
+    Metadata:
+      creation_time   : 2026-06-02T18:24:56.000000Z
+      handler_name    : SoundHandler
+      vendor_id       : [0][0][0][0]
+Stream mapping:
+  Stream #0:0 (h264) -> scale2ref
+  Stream #0:1 (aac) -> concat
+  Stream #1:0 (h264) -> scale2ref
+  Stream #1:1 (aac) -> concat
+  concat -> Stream #0:0 (libx264)
+  concat -> Stream #0:1 (aac)
+Press [q] to stop, [?] for help
+[Parsed_scale2ref_0 @ 00000229ec4cf280] scale2ref is deprecated, use scale=rw:rh instead
+[Parsed_concat_2 @ 00000229ec4ceb00] Input link in0:v0 parameters (size 640x360, SAR 1287:5120) do not match the corresponding output link in0:v0 parameters (640x360, SAR 1:1)
+[Parsed_concat_2 @ 00000229ec4ceb00] Failed to configure output pad on Parsed_concat_2
+[fc#0 @ 00000229ebfb5740] Error reinitializing filters!
+[fc#0 @ 00000229ebfb5740] Task finished with error code: -22 (Invalid argument)
+[fc#0 @ 00000229ebfb5740] Terminating thread with return code -22 (Invalid argument)
+[aost#0:1/aac @ 00000229ec56aa00] [enc:aac @ 00000229ec53edc0] Could not open encoder before EOF
+[aost#0:1/aac @ 00000229ec56aa00] Task finished with error code: -22 (Invalid argument)
+[aost#0:1/aac @ 00000229ec56aa00] Terminating thread with return code -22 (Invalid argument)
+[vost#0:0/libx264 @ 00000229ec56a500] [enc:libx264 @ 00000229ec53d500] Could not open encoder before EOF
+[vost#0:0/libx264 @ 00000229ec56a500] Task finished with error code: -22 (Invalid argument)
+[vost#0:0/libx264 @ 00000229ec56a500] Terminating thread with return code -22 (Invalid argument)
+[out#0/mp4 @ 00000229ec4cf180] Nothing was written into output file, because at least one of its streams received no packets.
+frame=    0 fps=0.0 q=0.0 Lsize=       0KiB time=N/A bitrate=N/A speed=N/A elapsed=0:00:00.04    
+Conversion failed!

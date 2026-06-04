@@ -1,0 +1,242 @@
+/* Base Styles & Variables */
+:root {
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --primary-color: #007bff;
+    --card-bg: #fff;
+    --accent-color: #ffc107;
+}
+
+/* Dark Mode Variables */
+.dark-mode {
+    --bg-color: #121212;
+    --text-color: #f4f4f4;
+    --card-bg: #1e1e1e;
+    --primary-color: #375a7f;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: var(--card-bg);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.user-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.credits {
+    background: var(--accent-color);
+    color: #000;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.earn-btn {
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+/* Main Container */
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    text-align: center;
+    padding: 20px;
+}
+
+.container h1 { margin-bottom: 10px; }
+.container p { margin-bottom: 30px; color: gray; }
+
+/* Input Group */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+#video-url {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
+#process-btn {
+    padding: 15px 30px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* Hidden Class */
+.hidden { display: none !important; }
+
+/* Download Options & Cards */
+.video-preview { margin-bottom: 30px; }
+.video-preview img { width: 100%; max-width: 300px; border-radius: 10px; }
+
+.action-cards {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border: 1px solid #ddd;
+}
+
+.card.premium { border-color: var(--accent-color); }
+.card.offline { border-color: #28a745; }
+
+.card h4 { margin-bottom: 10px; }
+.card p { font-size: 0.9rem; margin-bottom: 15px; }
+
+.download-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.normal-btn { background: #e0e0e0; color: #333; }
+.credit-btn { background: var(--accent-color); color: #000; }
+.offline-btn { background: #28a745; color: #fff; }
+
+/* --- Logic 2: Nav Menu & User ID --- */
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.user-id {
+    font-size: 0.8rem;
+    color: gray;
+    margin-right: 10px;
+}
+
+/* --- Logic 2: 3D Button Logic --- */
+.btn-3d {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s ease; /* Fast transition for a snappy, realistic feel */
+    position: relative;
+    top: 0;
+}
+
+/* Nav Buttons Specific */
+.nav-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    box-shadow: 0 4px 0 #b3b3b3; /* Bottom shadow creates the 3D height */
+}
+
+/* Primary Fetch Button */
+.primary-action {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 5px 0 #0056b3; /* Darker blue shadow */
+    padding: 15px 30px;
+    font-size: 1rem;
+}
+
+/* Hover Effect - Button slightly presses down */
+.btn-3d:hover {
+    top: 2px;
+    box-shadow: 0 2px 0 #b3b3b3; 
+}
+
+.primary-action:hover {
+    box-shadow: 0 3px 0 #0056b3;
+}
+
+/* Active (Click) Effect - Button fully presses down */
+.btn-3d:active {
+    top: 4px; 
+    box-shadow: 0 0 0 #b3b3b3; 
+}
+
+.primary-action:active {
+    top: 5px;
+    box-shadow: 0 0 0 #0056b3;
+}
+
+/* --- Logic 2: Custom Modal Styles --- */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 300px;
+}
