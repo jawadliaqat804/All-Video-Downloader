@@ -145,7 +145,7 @@ def get_video_info():
                 'naat', 'nasheed', 'tilawat', 'quran', 'islamic', 'bayan', 
                 'mufti', 'molvi', 'molana', 'maulana', 'qari', 'hafiz', 'sheikh', 'shaikh',
                 'khutba', 'dua', 'hamd', 'hadees', 'hadith', 'tafseer',
-                'vocal only', 'vocals only', 'no music', 'tasbeeh', 'dhikr', 'Farsi Noha', 'urdu noha', 'arabic nasheed', 'english nasheed', 'urdu nasheed', 'farsi nasheed', 'islamic nasheed', 'SoulFul Naats', 'Spiritual Nasheeds', 'Quran Recitation', 'Tilawat-e-Quran', 'Islamic Hamd', 'Hadees-e-Nabawi', 'Tafseer-e-Quran', 'No Music', 'Vocal Only', 'Vocals Only', 'urdu translations', 'farsi translations', 'arabic translations', 'english translations'
+                'vocal only', 'vocals only', 'no music', 'tasbeeh', 'dhikr', 'Farsi Noha', 'urdu noha', 'arabic nasheed', 'english nasheed', 'urdu nasheed', 'farsi nasheed', 'islamic nasheed', 'SoulFul Naats', 'Spiritual Nasheeds', 'Quran Recitation', 'Tilawat-e-Quran', 'Islamic Hamd', 'Hadees-e-Nabawi', 'Tafseer-e-Quran', 'No Music', 'Vocal Only', 'Vocals Only', 'urdu translations', 'farsi translations', 'arabic translations', 'english translations', 'islamic translations', 'quran translations', 'naat lyrics', 'nasheed lyrics', 'quran lyrics', 'islamic lyrics', 'hamd lyrics', 'hadees lyrics', 'tafseer lyrics', 'dua lyrics', 'dhikr lyrics', 'tasbeeh lyrics', 'azan', 'adhan', 'call to prayer', 'islamic call to prayer'
             ]
             # Check EXACT music words to avoid false alarms (like 'dance' in 'guidance')
             has_music = any(re.search(r'\b' + re.escape(m) + r'\b', full_text) for m in music_words)
@@ -348,5 +348,7 @@ def download_compressed(filename):
         return str(e)
 
 if __name__ == '__main__':
-    # Start the server on port 5000
-    app.run(debug=True, port=5000)
+    # Bind to 0.0.0.0 and dynamic port so Render can expose the server to the internet
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
