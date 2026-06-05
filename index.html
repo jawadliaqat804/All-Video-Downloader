@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+      <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#333333">
 </head>
 <body>
     <!-- Navbar Section -->
@@ -17,6 +19,9 @@
             <button class="nav-btn btn-3d">Settings</button>
             <button class="nav-btn btn-3d">About</button>
             <button class="nav-btn btn-3d">Connect US</button>
+            <button id="install-app-btn" class="nav-btn btn-3d" style="display: none; background-color: #28a745; color: white;">
+                <i class="fa-solid fa-download"></i> Install App
+            </button>
         </nav>
         <span id="user-id-display" class="user-id">Guest_...</span>
             
