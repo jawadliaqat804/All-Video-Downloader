@@ -62,7 +62,7 @@ processBtn.addEventListener('click', () => {
     }
 
     // --- 2. SECOND LINE OF DEFENSE (Send to Python for Deep Smart Check) ---
-    fetch('http://127.0.0.1:5000/api/download', {
+   fetch('https://all-video-downloader-hcqb.onrender.com/api/download', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ progText.innerText = `${progress}% - Preparing Video...`;
                     progText.innerHTML = "Sending to Gallery/Downloads ✅";
                     // 🔥 MASTER STROKE FIX: Use window.location to bypass File Manager security blocks
                     const safeTitle = (data.title || "video").replace(/[^a-zA-Z0-9]/g, "_");
-                    const downloadProxyUrl = `http://127.0.0.1:5000/api/proxy_download?url=${encodeURIComponent(selectedUrl)}&title=${encodeURIComponent(safeTitle)}`;
+                    const downloadProxyUrl = `https://all-video-downloader-hcqb.onrender.com/api/proxy_download?url=${encodeURIComponent(selectedUrl)}&title=${encodeURIComponent(safeTitle)}`;
                     window.location.href = downloadProxyUrl;
 
                     // 🔥 NEW: Save real data to database!
@@ -279,7 +279,7 @@ window.addEventListener('online', () => {
             
             queueItems.forEach(item => {
                 // Force download via Python proxy
-                const downloadProxyUrl = 'http://127.0.0.1:5000/api/proxy_download?url=' + encodeURIComponent(item.url);
+                const downloadProxyUrl = 'https://all-video-downloader-hcqb.onrender.com/api/proxy_download?url=' + encodeURIComponent(item.url);
                 
                 const downloadLink = document.createElement('a');
                 downloadLink.href = downloadProxyUrl;
@@ -561,7 +561,7 @@ if (dataSaverBtn) {
         dataSaverBtn.style.opacity = "0.7";
 
         // 4. Send to Python Server to start background task
-        fetch('http://127.0.0.1:5000/api/start_compression', {
+        fetch('https://all-video-downloader-hcqb.onrender.com/api/start_compression', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: selectedUrl })
@@ -587,7 +587,7 @@ if (dataSaverBtn) {
 function startPollingStatus(jobId, originalText, originalMb) {
     const interval = setInterval(() => {
         
-        fetch(`http://127.0.0.1:5000/api/check_compression/${jobId}`)
+       fetch(`https://all-video-downloader-hcqb.onrender.com/api/check_compression/${jobId}`)
         .then(res => res.json())
         .then(job => {
             if (job.status === 'completed') {
@@ -615,7 +615,7 @@ function startPollingStatus(jobId, originalText, originalMb) {
                 const savedTitle = videoTitleObj ? videoTitleObj.innerText : "Compressed Video";
                 saveToHistory(savedTitle, "Data Saver (Compressed)");
                
-                const downloadUrl = `http://127.0.0.1:5000/api/download_compressed/${job.file_path}`;
+                const downloadUrl = `https://all-video-downloader-hcqb.onrender.com/api/download_compressed/${job.file_path}`;
                 window.location.href = downloadUrl; 
 
               
