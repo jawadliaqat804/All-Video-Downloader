@@ -6,18 +6,28 @@ import threading
 import subprocess
 # Import the required modules for the proxy download
 import requests
-from flask import Flask, request, jsonify, Response, stream_with_context
+# Import render_template for HTML and send_from_directory for CSS/JS files
+from flask import Flask, request, jsonify, Response, stream_with_context, render_template, send_from_directory
 from flask_cors import CORS
 import yt_dlp
 import re
 
-app = Flask(__name__)
+# Configure Flask to look for templates in the current root directory (.)
+app = Flask(__name__, template_folder=".")
 # This allows our JS and Python to talk to each other
+
 CORS(app)
 
 @app.route('/')
 def home():
-    return "Mera Python Server Chal Raha Hai!"
+    # Serve the main index.html file
+    return render_template('index.html')
+
+# Serve static files like style.css, script.js, and logo.png from the root directory
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('.', filename)
+
 # New Route: Force browser to download instead of playing
 @app.route('/api/proxy_download')
 def proxy_download():
@@ -236,8 +246,8 @@ def process_compression(job_id, video_url):
     output_filename = f"compressed_{job_id}.mp4"
     output_path = os.path.join(tempfile.gettempdir(), output_filename)
     
-    # 🔥 NEW IDEA 1: Outro Video Path (Assets Folder)
-    outro_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'outro.mp4')
+   # 🔥 NEW IDEA 1: Outro Video Path (Root Folder)
+    outro_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outro.mp4')
     
     # 🕵️ JASOOS LINE: Terminal path check
     print(f"\n🕵️ CHECKING PATH: {outro_path}") 
