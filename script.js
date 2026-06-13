@@ -28,7 +28,8 @@ themeToggleBtn.addEventListener('click', () => {
 const forbiddenTags = ['music', 'song', 'movie', 'dance', 'adult', 'porn', '18+', 'sexy'];
 
 // 2. Fetch Video Action with Strict Simulated API Check
-processBtn.addEventListener('click', () => {
+processBtn.addEventListener('click', (e) => {
+    e.preventDefault();
     const url = urlInput.value;
     
     if(url.trim() === "") {
@@ -37,6 +38,7 @@ processBtn.addEventListener('click', () => {
     }
 
    processBtn.innerText = "Checking Content...";
+  
 
     // --- RESET UI (Logic 6: Hide and clear old data immediately after click) ---
     downloadOptions.classList.add('hidden'); // Hide the box
@@ -62,7 +64,7 @@ processBtn.addEventListener('click', () => {
     }
 
     // --- 2. SECOND LINE OF DEFENSE (Send to Python for Deep Smart Check) ---
-   fetch('https://all-video-downloader-hcqb.onrender.com/api/download', {
+    fetch('http://127.0.0.1:5000/api/download', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -70,11 +72,12 @@ processBtn.addEventListener('click', () => {
         body: JSON.stringify({ url: url }) // Send URL to Python
     })
     .then(response => response.json())
-    .then(data => {
-        // If Python finds hidden music, Pakistani dramas, or adult tags
-        if (data.error) {
+    .then(data => {
+            // If Python finds hidden music, Pakistani dramas, or adult tags
+            if (data.error) {
             showCustomAlert("System Alert:\n\n" + data.error);
             processBtn.innerText = "Download Video";
+            
             return;
         }
 
@@ -129,6 +132,10 @@ processBtn.addEventListener('click', () => {
 
         // 4. Attach Click Event (Logic 8 - USB Animation Download)
         newStandardBtn.addEventListener('click', () => {
+            // 🌟 Smartlink Integration: Add this line
+    window.open("https://www.effectivecpmnetwork.com/k8at6mgk8q?key=0971d0ad6934851cbccd39db70134434", "_blank");
+           
+
             const dropdown = document.getElementById('quality-dropdown');
             const selectedUrl = dropdown ? dropdown.value : data.video_url;
 
@@ -186,7 +193,7 @@ progText.innerText = `${progress}% - Preparing Video...`;
                     progText.innerHTML = "Sending to Gallery/Downloads ✅";
                     // 🔥 MASTER STROKE FIX: Use window.location to bypass File Manager security blocks
                     const safeTitle = (data.title || "video").replace(/[^a-zA-Z0-9]/g, "_");
-                    const downloadProxyUrl = `https://all-video-downloader-hcqb.onrender.com/api/proxy_download?url=${encodeURIComponent(selectedUrl)}&title=${encodeURIComponent(safeTitle)}`;
+                    const downloadProxyUrl = `http://127.0.0.1:5000/api/proxy_download?url=${encodeURIComponent(selectedUrl)}&title=${encodeURIComponent(safeTitle)}`;
                     window.location.href = downloadProxyUrl;
 
                     // 🔥 NEW: Save real data to database!
@@ -219,6 +226,10 @@ progText.innerText = `${progress}% - Preparing Video...`;
 // ==========================================
 
 offlineQueueBtn.addEventListener('click', () => {
+    // 🌟 Smartlink Integration: Add this line
+    window.open("https://www.effectivecpmnetwork.com/k8at6mgk8q?key=0971d0ad6934851cbccd39db70134434", "_blank");
+   
+
     if (navigator.onLine) {
         showCustomAlert("You are currently Online! Please use the Standard or Data Saver buttons.");
         return;
@@ -279,7 +290,7 @@ window.addEventListener('online', () => {
             
             queueItems.forEach(item => {
                 // Force download via Python proxy
-                const downloadProxyUrl = 'https://all-video-downloader-hcqb.onrender.com/api/proxy_download?url=' + encodeURIComponent(item.url);
+                const downloadProxyUrl = 'http://127.0.0.1:5000/api/proxy_download?url=' + encodeURIComponent(item.url);
                 
                 const downloadLink = document.createElement('a');
                 downloadLink.href = downloadProxyUrl;
@@ -531,6 +542,9 @@ const dataSaverBtn = document.getElementById('data-saver-btn');
 
 if (dataSaverBtn) {
     dataSaverBtn.addEventListener('click', () => {
+        // 🌟 Smartlink Integration: Add this line
+    window.open("https://www.effectivecpmnetwork.com/k8at6mgk8q?key=0971d0ad6934851cbccd39db70134434", "_blank");
+       
         
         // 1. Check & Deduct 10 Credits instantly!
         if (!deductCredits(10)) {
@@ -561,7 +575,7 @@ if (dataSaverBtn) {
         dataSaverBtn.style.opacity = "0.7";
 
         // 4. Send to Python Server to start background task
-        fetch('https://all-video-downloader-hcqb.onrender.com/api/start_compression', {
+        fetch('http://127.0.0.1:5000/api/start_compression', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: selectedUrl })
@@ -587,7 +601,7 @@ if (dataSaverBtn) {
 function startPollingStatus(jobId, originalText, originalMb) {
     const interval = setInterval(() => {
         
-       fetch(`https://all-video-downloader-hcqb.onrender.com/api/check_compression/${jobId}`)
+        fetch(`http://127.0.0.1:5000/api/check_compression/${jobId}`)
         .then(res => res.json())
         .then(job => {
             if (job.status === 'completed') {
@@ -615,7 +629,7 @@ function startPollingStatus(jobId, originalText, originalMb) {
                 const savedTitle = videoTitleObj ? videoTitleObj.innerText : "Compressed Video";
                 saveToHistory(savedTitle, "Data Saver (Compressed)");
                
-                const downloadUrl = `https://all-video-downloader-hcqb.onrender.com/api/download_compressed/${job.file_path}`;
+                const downloadUrl = `http://127.0.0.1:5000/api/download_compressed/${job.file_path}`;
                 window.location.href = downloadUrl; 
 
               
@@ -732,4 +746,51 @@ appLogo.addEventListener('dblclick', () => {
         }, 200); // Wait for zoom-out animation to finish
     });
 });
+
+// --- PWA Installation Logic (App Download System) ---
+
+let deferredPrompt;
+const installAppBtn = document.getElementById('install-app-btn');
+
+// 1. Register the Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('Service Worker registered successfully:', registration.scope);
+            })
+            .catch((error) => {
+                console.log('Service Worker registration failed:', error);
+            });
+    });
+}
+
+// 2. Catch the install prompt and show the button
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the default browser pop-up
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Show our custom "Install App" button
+    if (installAppBtn) {
+        installAppBtn.style.display = 'inline-block';
+    }
+});
+
+// 3. Handle the user clicking the "Install App" button
+if (installAppBtn) {
+    installAppBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // Show the actual installation prompt to the user
+            deferredPrompt.prompt();
+            // Wait for the user's response (Yes or No)
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            
+            // Clear the prompt and hide the button
+            deferredPrompt = null;
+            installAppBtn.style.display = 'none';
+        }
+    });
+}
 

@@ -15,8 +15,8 @@ import re
 # Configure Flask to look for templates in the current root directory (.)
 app = Flask(__name__, template_folder=".")
 # This allows our JS and Python to talk to each other
-
 CORS(app)
+compression_jobs = {}
 
 @app.route('/')
 def home():
@@ -28,6 +28,7 @@ def home():
 def serve_static(filename):
     return send_from_directory('.', filename)
 
+# New Route: Force browser to download instead of playing
 # New Route: Force browser to download instead of playing
 @app.route('/api/proxy_download')
 def proxy_download():
@@ -64,6 +65,11 @@ def get_video_info():
     if not video_url:
         return jsonify({"error": "No URL provided!"}), 400
 
+    # 🧹 UNIVERSAL SAFAI CHAT STRICT FILTER (GLOBAL LIST FOR ALL PLATFORMS) 🧹
+    bad_words = ['movie', 'song', 'music', 'dance', 'mujra', 'kiss', 'hot', 'sexy', 'porn', '18+', 'nude', 'item song', 'viralsong','videosong', 'romantic', 'erotic', 'web series', 'drama', 'trailer', 'teaser', 'bollywood', 'hollywood', 'tollywood', 'lollywood', 'netflix', 'ullu', 'turkish romance', 'desi hot', 'mms', 'leaked', 'thumka', 'thumke', 'thumke ki', 'thumka ki', 'thumka laga ke', 'thumka lagake', 'choreography', 'choreo', 'twerk', 'soundtrack', 'remix', 'mashup', 'cover', 'lofi', 'beats', 'reverb', 'dailyvloger', 'songs', 'music video', 'full hd movie', 'full hd video', 'hd movie', 'hd video', 'full movie', 'full video', 'hd song', 'full hd song', 'hd music', 'full hd music', 'best song', 'best music', 'best video', 'best movie', 'new song', 'new music', 'new video', 'new movie', 'mashup', 'remix', 'cover', 'lofi', 'beats', 'reverb', 'videosong', 'stagedrama', ]
+    if any(word in video_url.lower() for word in bad_words):
+        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+
     # 🔥 MASTER NEW LOGIC (Third-Party API for TikTok ONLY)
     if 'tiktok.com' in video_url.lower():
         try:
@@ -73,7 +79,13 @@ def get_video_info():
             if res.get('code') == 0:
                 tk_data = res.get('data', {})
                 title = tk_data.get('title', 'TikTok Video')
-                thumbnail = tk_data.get('cover')
+                
+                # 🧹 DEEP SCAN: Check TikTok Title for Bad Words!
+                if any(word in title.lower() for word in bad_words):
+                    return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                    
+                # 🔥 FIX: Thumbnail Fallback
+                thumbnail = tk_data.get('cover') if tk_data.get('cover') else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
                 
                 clean_formats = []
                 
@@ -102,89 +114,200 @@ def get_video_info():
                 return jsonify({"error": "TikTok API Failed. Video might be private."}), 400
         except Exception as e:
             return jsonify({"error": f"TikTok API Error: {str(e)}"}), 500
+# 🛡️ PROTECTIVE SHIELD: THE "API MAGIC" LAYER (Like TikTok)
+    # Identifying the platform
+    is_youtube = 'youtube.com' in video_url.lower() or 'youtu.be' in video_url.lower()
+    is_facebook = 'facebook.com' in video_url.lower() or 'fb.watch' in video_url.lower() or 'fb.com' in video_url.lower()
+    is_instagram = 'instagram.com' in video_url.lower()
+    is_tiktok = 'tiktok.com' in video_url.lower()
 
-    # 🛡️ PROTECTIVE SHIELD: YT, FB, Insta will continue to use yt-dlp smoothly below
-    # Configure yt-dlp to only extract info, not download to laptop
+  # ==========================================
+    # 🟢 LAYER 1: UNIVERSAL API FOR FB, INSTA & YOUTUBE (The TikTok Formula)
+    # ==========================================
+    # 🧹 UNIVERSAL SAFAI CHAT STRICT FILTER (APPLIES TO ALL PLATFORMS) 🧹
+  
 
-    # Configure yt-dlp to only extract info, not download to laptop
+    if is_facebook or is_instagram or is_youtube:
+        try:
+
+            # 🔥 FIX: Main Cobalt API (Fixes Insta Empty Media & YT Audio automatically)
+            api_endpoint = "https://api.cobalt.tools/api/json"
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Origin": "https://cobalt.tools",
+                "Referer": "https://cobalt.tools/"
+            }
+            payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
+            
+            api_res = requests.post(api_endpoint, json=payload, headers=headers, timeout=15)
+            
+            if api_res.status_code == 200:
+                data = api_res.json()
+                
+                # 🧹 SAFAI CHAT STRICT FILTER (TITLE CHECK) 🧹
+                title = data.get('title', '').lower()
+                if any(word in title for word in bad_words):
+                    return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
+
+                direct_url = data.get('url')
+                if not direct_url and data.get('picker'):
+                    direct_url = data.get('picker')[0].get('url')
+                    
+                if direct_url:
+                    api_thumb = data.get('thumbnail')
+                    thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+                    
+                    # 🔥 NEW YOUTUBE THUMBNAIL MAGIC: Extract video ID and get official HD thumbnail directly
+                    if is_youtube:
+                        video_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', video_url)
+                        if video_id_match:
+                            thumb_url = f"https://img.youtube.com/vi/{video_id_match.group(1)}/hqdefault.jpg"
+                    
+                    formats = [{"label": "Standard Download (Merged Video)", "url": direct_url}]
+                    
+                    # 🔥 FIX: Get Audio MP3 Format explicitly!
+                    try:
+                        audio_payload = {"url": video_url, "isAudioOnly": True}
+                        audio_res = requests.post(api_endpoint, json=audio_payload, headers=headers, timeout=10)
+                        if audio_res.status_code == 200 and audio_res.json().get('url'):
+                            formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                    except:
+                        pass
+
+                    return jsonify({
+                        "success": True,
+                        "title": title if title else "Video Ready!",
+                        "thumbnail": thumb_url, 
+                        "formats": formats
+                    })
+        except Exception as e:
+            print(f"API Magic Failed, falling back to yt-dlp: {str(e)}")
+
+    # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
     ydl_opts = {
         'quiet': True,
-        'skip_download': True,
-       
-        # Added Headers to fix Instagram "There is no video in this post" alert
+        'skip_download': False, 
+        'nocheckcertificate': True,
+        'format': 'bestvideo+bestaudio/best', # This forces both streams to download
+        'merge_output_format': 'mp4',        # This merges them automatically
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36',
-            'Referer': 'https://www.tiktok.com/'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         }
     }
+
+    # 1. 🔴 YOUTUBE LOGIC
+    if is_youtube:
+        ydl_opts['cookiefile'] = 'cookies.txt'
+        # Let yt-dlp ask for 'best' to safely bypass YouTube's strict format block
+        # Don't worry, info['formats'] will still fetch MP3 streams for our buttons!
+        ydl_opts['format'] = 'best'
+        ydl_opts['merge_output_format'] = 'mp4'
+        ydl_opts['skip_download'] = True
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'web']}}
+
+    # 2. 🔵 FACEBOOK LOGIC
+    elif is_facebook:
+        ydl_opts['cookiefile'] = 'cookies.txt' 
+        ydl_opts['format'] = 'best[ext=mp4]/best' 
+
+    # 3. 🟣 INSTAGRAM LOGIC
+    elif is_instagram:
+        ydl_opts['cookiefile'] = 'cookies.txt' 
+        ydl_opts['format'] = 'best[ext=mp4]/best'
+        ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
+        
+    # 4. ⚫ TIKTOK LOGIC 
+    elif is_tiktok:
+        ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
+        ydl_opts['format'] = 'best'
+
+    # 5. ⚪ OTHER PLATFORMS
+    else:
+        ydl_opts['format'] = 'best'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
             
             # --- LOGIC 7 (Part 1): The Smart Detective ---
-            # 1. Gather all text (Title, Description, Tags, Category)
             title = (info.get('title') or "").lower()
             desc = (info.get('description') or "").lower()
             tags = " ".join(info.get('tags') or []).lower()
             categories = " ".join(info.get('categories') or []).lower()
             
             full_text = f"{title} {desc} {tags} {categories}"
-          # 2. Ultra-Strict Blacklist (Ganda Content, Dramas, Web Series & Vulgarity)
-            strict_blacklist = [
-                'movie', 'bollywood', 'hollywood', 'lollywood', 'tollywood', 
-                'indian drama', 'pakistani drama', 'web series', 'netflix', 'ullu', 
-                'episode', 'trailer', 'teaser', 'romantic', 'kiss', 'hot', 'sexy', 
-                'porn', '18+', 'nude', 'naked', 'adult', 'erotic', 'xxx', 'mms', 
-                'leaked', 'desi hot', 'mujra', 'item song', 'thumka', 'turkish romance'
-            ]
-            for bad_word in strict_blacklist:
-               if re.search(r'\b' + re.escape(bad_word) + r'\b', full_text):
-                    # Logic 7: Emotional and Islamic Guideline Message
-                    islamic_message = (
-                        "Restricted Content Blocked!\n\n"
-                        "Downloading movies, dramas, music, or inappropriate content goes against Islamic guidelines "
-                        "and is strictly NOT ALLOWED on this platform. Please respect the purpose of this app.\n\n"
-                        f"(System caught the keyword: '{bad_word}')"
-                    )
-                    return jsonify({"error": islamic_message})
-            # 3. Music Check with Whitelist (Nasheed exceptions)
-            music_words = ['music', 'song', 'bgm', 'instrumental', 'dance', 'dj', 'remix', 'mashup', 'cover', 'lofi', 'beats',  'reverb', 'choreography', 'choreo' 'twerk', 'soundtrack']
-          # Optimized Whitelist using Global Titles
+           # 🔥 THE SMART RATIO SCANNER DEEP SCAN 🔥
+            music_words = ['music', 'bgm', 'instrumental', 'dance', 'dj', 'remix', 'mashup', 'cover', 'lofi', 'beats', 'reverb', 'choreography', 'choreo', 'twerk', 'soundtrack']
+            
+            # Moved whitelist up so Python reads it before counting
             whitelist = [
                 'naat', 'nasheed', 'tilawat', 'quran', 'islamic', 'bayan', 
                 'mufti', 'molvi', 'molana', 'maulana', 'qari', 'hafiz', 'sheikh', 'shaikh',
                 'khutba', 'dua', 'hamd', 'hadees', 'hadith', 'tafseer',
-                'vocal only', 'vocals only', 'no music', 'tasbeeh', 'dhikr', 'Farsi Noha', 'urdu noha', 'arabic nasheed', 'english nasheed', 'urdu nasheed', 'farsi nasheed', 'islamic nasheed', 'SoulFul Naats', 'Spiritual Nasheeds', 'Quran Recitation', 'Tilawat-e-Quran', 'Islamic Hamd', 'Hadees-e-Nabawi', 'Tafseer-e-Quran', 'No Music', 'Vocal Only', 'Vocals Only', 'urdu translations', 'farsi translations', 'arabic translations', 'english translations', 'islamic translations', 'quran translations', 'naat lyrics', 'nasheed lyrics', 'quran lyrics', 'islamic lyrics', 'hamd lyrics', 'hadees lyrics', 'tafseer lyrics', 'dua lyrics', 'dhikr lyrics', 'tasbeeh lyrics', 'azan', 'adhan', 'call to prayer', 'islamic call to prayer'
+                'vocal only', 'vocals only', 'no music', 'tasbeeh', 'dhikr', 'azan', 'adhan', 'call to prayer',
+                'tuaha ibn jalil', 'youth club', 'musfirahfamily', 'islamic tarana', 'jihaditarana', 'soulful naats', 'spiritual nasheeds'
             ]
-            # Check EXACT music words to avoid false alarms (like 'dance' in 'guidance')
+            
+            # 1. Count Safe Words (Naat aur Islami alfaaz ki ginti)
+            safe_count = sum(full_text.count(w) for w in whitelist)
+            title_safe_count = sum(title.count(w) for w in whitelist)
+            total_safe_score = safe_count + (title_safe_count * 2) # Title wale lafz ko double power milegi
+
+            # 2. Find and Count Bad/Music Words (Music wale alfaaz ki ginti aur nishandahi)
+            found_bad_words = [b for b in bad_words + music_words if b in full_text]
+            total_bad_score = sum(full_text.count(b) for b in bad_words + music_words)
+            
+            # 3. The Ratio Decision (Faisla)
+            if total_bad_score > 0 and total_bad_score > total_safe_score:
+                # Pakray gaye alfaaz ko comma (,) laga kar ek saath jorein taake user ko pata chale
+                caught_words = ", ".join(found_bad_words[:3]) 
+                
+                islamic_message = (
+                    "Restricted Content Blocked!\n\n"
+                    "Downloading movies, dramas, music, or inappropriate content goes against Islamic guidelines "
+                    "and is strictly NOT ALLOWED on this platform. Please respect the purpose of this app.\n\n"
+                    f"(System caught the keyword: '{caught_words}')\n"
+                    f"(Score Check: Bad={total_bad_score}, Safe={total_safe_score})"
+                )
+                return jsonify({"error": islamic_message})
+            
+            whitelist = [
+                'naat', 'nasheed', 'tilawat', 'quran', 'islamic', 'bayan', 
+                'mufti', 'molvi', 'molana', 'maulana', 'qari', 'hafiz', 'sheikh', 'shaikh',
+                'khutba', 'dua', 'hamd', 'hadees', 'hadith', 'tafseer',
+                'vocal only', 'vocals only', 'no music', 'tasbeeh', 'dhikr', 'Farsi Noha', 'urdu noha', 'arabic nasheed', 'english nasheed', 'urdu nasheed', 'farsi nasheed', 'islamic nasheed', 'SoulFul Naats', 'Spiritual Nasheeds', 'Quran Recitation', 'Tilawat-e-Quran', 'Islamic Hamd', 'Hadees-e-Nabawi', 'Tafseer-e-Quran', 'No Music', 'Vocal Only', 'Vocals Only', 'urdu translations', 'farsi translations', 'arabic translations', 'english translations', 'islamic translations', 'quran translations', 'naat lyrics', 'nasheed lyrics', 'quran lyrics', 'islamic lyrics', 'hamd lyrics', 'hadees lyrics', 'tafseer lyrics', 'dua lyrics', 'dhikr lyrics', 'tasbeeh lyrics', 'azan', 'adhan', 'call to prayer', 'islamic call to prayer', 'islamic azan', 'islamic adhan', 'quran recitation', 'tilawat-e-quran', 'hamd', 'hadees-e-nabawi', 'tafseer-e-quran', 'arshad Reels', 'misha bashir Reels', 'misha bashir shorts', 'soulful naats', 'spiritual nasheeds', 'quran recitation', 'tilawat-e-quran', 'islamic hamd', 'hadees-e-nabawi', 'tafseer-e-quran', 'tuaha ibn jalil', 'youth club', 'islamic youth club', 'islamic lectures for youth', 'islamic videos for youth', 'youth islamic videos', 'youth islamic lectures', 'musfirahfamily', 'islamic tarana', 'jihaditarana', 'islamic tarana'
+            ]
+            
             has_music = any(re.search(r'\b' + re.escape(m) + r'\b', full_text) for m in music_words)
             is_safe_nasheed = any(re.search(r'\b' + re.escape(w) + r'\b', full_text) for w in whitelist)
             
-            # If it has music words BUT is NOT a nasheed/quran, block it!
             if has_music and not is_safe_nasheed:
                 return jsonify({"error": "System Alert: Music/BGM Detected! Not allowed unless it is a 'Nasheed' or marked 'No Music'."})
             
-           # --- If everything is clean, send data to JS ---
-            # LOGIC 8: Collect formats & FIX TikTok/FB Corrupt Files / Max 2 Audios
-            raw_formats = info.get('formats') or [info] # Fallback if formats array is missing
+            # --- If everything is clean, send data to JS ---
+            raw_formats = info.get('formats') or [info] 
             clean_formats = []
-            audio_count = 0 # STRICTLY max 2 audio formats
-            best_direct_url = info.get('url') # Fallback direct URL if formats are missing
+            audio_count = 0 
+            best_direct_url = info.get('url')
             
+            best_thumbnail = info.get('thumbnail')
+            if info.get('thumbnails'):
+                best_thumbnail = info['thumbnails'][-1]['url'] 
+
             for f in raw_formats:
-                height = f.get('height')
+                height = f.get('height') or 'HD'
                 vcodec = f.get('vcodec', 'none')
                 acodec = f.get('acodec', 'none')
                 url = f.get('url')
                 ext = f.get('ext', 'mp4')
                 protocol = f.get('protocol', '')
                 
-                # 🔥 100% FIX for Corrupt File: Strictly block ALL non-http protocols (like m3u8 playlists)
-                if protocol not in ['http', 'https']:
+                # 🔥 FIX 2: Added 'dash' & 'dashy' protocols! FB/YT videos are DASH, without this they get skipped!
+                if protocol not in ['http', 'https', 'm3u8', 'm3u8_native', 'dash', 'dashy', 'dash_native']:
                     continue
                 
-                # --- LOGIC MASTERSTROKE: Get filesize and convert to MB ---
                 filesize = f.get('filesize') or f.get('filesize_approx') or 0
                 mb_size = round(filesize / (1024 * 1024), 1)
                 size_tag = f" ({mb_size} MB)" if mb_size > 0 else ""
@@ -192,52 +315,49 @@ def get_video_info():
                 if not url: continue
                 
                 label = ""
-                # 🛡️ PROTECTIVE SHIELD: Identify if it is TikTok
                 is_tiktok = 'tiktok' in (info.get('extractor') or '').lower()
                 
-                # 🔥 LOGIC FIX for Muted Video & TikTok Watermark Options!
-                if vcodec != 'none' and acodec != 'none' and height and ext == 'mp4':
+                # Treat as video if vcodec exists
+                if vcodec != 'none':
                     if is_tiktok:
-                        # Only apply Watermark logic to TikTok
                         if 'watermark' in url.lower() or 'wm' in url.lower() or 'bytevc1' in url.lower():
                             label = f"Video - With Watermark{size_tag}"
                         else:
                             label = f"Video - No Watermark{size_tag}"
                     else:
-                        # 🛡️ This keeps Facebook, Insta, and YouTube working EXACTLY as before!
                         label = f"Video - {height}p{size_tag}"
-                # --- EXACTLY 2 AUDIO FORMATS ---
+                
+                # Max 2 Audio formats
                 elif acodec != 'none' and vcodec == 'none':
                     if audio_count < 2:
+                        
                         label = f"Audio Only{size_tag}"
                         audio_count += 1
                     else:
-                        continue # Skip extra audios
+                        continue 
                     
-                # Add to list if not already added (to avoid clutter)
                 if label and not any(d['label'] == label for d in clean_formats):
                     clean_formats.append({"label": label, "url": url})
             
-            # 🔥 Fallback: If FB/Insta completely hid the formats, use the main direct video link
-            if not any("Video" in d['label'] for d in clean_formats) and best_direct_url:
-                clean_formats.append({"label": "Video - Best Quality", "url": best_direct_url})
-                
-            # Reverse list to show highest qualities at the top
+            if best_direct_url:
+                mb_size_best = round((info.get('filesize') or info.get('filesize_approx') or 0) / (1024 * 1024), 1)
+                size_tag_best = f" ({mb_size_best} MB)" if mb_size_best > 0 else ""
+                if not any(d['url'] == best_direct_url for d in clean_formats):
+                    clean_formats.append({"label": f"Standard Download (Merged Video){size_tag_best}", "url": best_direct_url})
+            
             clean_formats.reverse()
             
             return jsonify({
                 "success": True,
-                "title": info.get('title'),
-                "thumbnail": info.get('thumbnail'),
-                "formats": clean_formats  # Sending the full quality menu to JS
+                "title": info.get('title') or "Downloaded Video",
+                "thumbnail": best_thumbnail, 
+                "formats": clean_formats  
             })
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ==========================================
-# --- LOGIC DATA SAVER 2 (BACKGROUND JOBS) ---
-# ==========================================
-compression_jobs = {}
+        error_msg = str(e)
+        if "Empty media response" in error_msg or "Private video" in error_msg:
+            return jsonify({"error": "System Alert: Instagram Privacy Block! This video is private or restricted by Instagram. Please try a public reel."}), 400
+        return jsonify({"error": error_msg}), 500
 
 def process_compression(job_id, video_url):
     # Set status to processing
@@ -246,19 +366,25 @@ def process_compression(job_id, video_url):
     output_filename = f"compressed_{job_id}.mp4"
     output_path = os.path.join(tempfile.gettempdir(), output_filename)
     
-   # 🔥 NEW IDEA 1: Outro Video Path (Root Folder)
+    # 🔥 NEW IDEA 1: Outro Video Path (Root Folder)
     outro_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'outro.mp4')
     
     # 🕵️ JASOOS LINE: Terminal path check
     print(f"\n🕵️ CHECKING PATH: {outro_path}") 
     
     try:
+        # Check if video has video stream
+        try:
+            probe_cmd = ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_type', '-of', 'default=noprint_wrappers=1:nokey=1', video_url]
+            has_video = subprocess.check_output(probe_cmd).decode('utf-8').strip() == 'video'
+        except:
+            has_video = False
+
         # 🔥 SMART LOGIC: If outro exists, resize it to match the main video and merge them!
-        if os.path.exists(outro_path):
+        if has_video and os.path.exists(outro_path):
             print("✅ OUTRO VIDEO FOUND! JORNA SHURU KAREIN!") # If file is found
             try:
                 # Fixed: "Logic Kam Size" - Kept your exact video/logo layout untouched!
-                # Only changed CRF to 34 (forces size down) and Preset to ultrafast (fixes the 3-minute delay).
                 command = [
                     'ffmpeg', '-y', 
                     '-i', video_url, 
@@ -288,13 +414,16 @@ def process_compression(job_id, video_url):
                 ]
                 subprocess.run(command, check=True)
         else:
-            print("❌ OUTRO FILE MISSING! NORMAL COMPRESSION RUNNING.") # If file is missing
-            # Normal compression if assets/outro.mp4 is missing
-            command = [
-                'ffmpeg', '-y', '-i', video_url,
-                '-vcodec', 'libx264', '-crf', '28', '-preset', 'veryfast',
-                output_path
-            ]
+            print("❌ OUTRO FILE MISSING OR AUDIO ONLY! NORMAL COMPRESSION RUNNING.") 
+            # Normal compression if assets/outro.mp4 is missing or it's just an audio file
+            if has_video:
+                command = [
+                    'ffmpeg', '-y', '-i', video_url,
+                    '-vcodec', 'libx264', '-crf', '28', '-preset', 'veryfast',
+                    output_path
+                ]
+            else:
+                command = ['ffmpeg', '-y', '-i', video_url, '-c', 'copy', output_path]
             subprocess.run(command, check=True)
             
         final_size_bytes = os.path.getsize(output_path)
