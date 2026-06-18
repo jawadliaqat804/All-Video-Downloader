@@ -185,15 +185,19 @@ def get_video_info():
         except Exception as e:
             print(f"API Magic Failed, falling back to yt-dlp: {str(e)}")
 
-    # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
+   # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
     ydl_opts = {
         'quiet': True,
         'skip_download': False, 
         'nocheckcertificate': True,
         'format': 'bestvideo+bestaudio/best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
+        'cookiefile': 'cookies.txt',         # 🔥 FIX: Global Cookies for Private FB/Insta Videos
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', # 🔥 FIX: Bypass FB Parser Error
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate'
         }
     }
 
@@ -292,9 +296,18 @@ def get_video_info():
             audio_count = 0 
             best_direct_url = info.get('url')
             
-            best_thumbnail = info.get('thumbnail')
+           best_thumbnail = info.get('thumbnail')
             if info.get('thumbnails'):
                 best_thumbnail = info['thumbnails'][-1]['url'] 
+                
+            # 🔥 FIX: Fallback for missing Instagram/FB Thumbnails
+            if not best_thumbnail or best_thumbnail == '':
+                if is_instagram:
+                    best_thumbnail = 'https://cdn-icons-png.flaticon.com/512/174/174855.png' # Insta Logo
+                elif is_facebook:
+                    best_thumbnail = 'https://cdn-icons-png.flaticon.com/512/124/124010.png' # FB Logo
+                else:
+                    best_thumbnail = 'https://cdn-icons-png.flaticon.com/512/4211/4211158.png' # Default Video Icon
 
             for f in raw_formats:
                 height = f.get('height') or 'HD'
