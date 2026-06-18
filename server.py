@@ -325,7 +325,11 @@ def get_video_info():
                         else:
                             label = f"Video - No Watermark{size_tag}"
                     else:
-                        label = f"Video - {height}p{size_tag}"
+                         # 🔥 FIX: Explicitly label Mute vs Audio videos for Facebook/YouTube!
+                        if acodec == 'none':
+                            label = f"Video - {height}p{size_tag} (MUTE/No Audio)"
+                        else:
+                            label = f"Video - {height}p{size_tag} (With Audio)"
                 
                 # Max 2 Audio formats
                 elif acodec != 'none' and vcodec == 'none':
@@ -384,15 +388,17 @@ def process_compression(job_id, video_url):
         if has_video and os.path.exists(outro_path):
             print("✅ OUTRO VIDEO FOUND! JORNA SHURU KAREIN!") # If file is found
             try:
-                # Fixed: "Logic Kam Size" - Kept your exact video/logo layout untouched!
+                # 🔥 STRICT FFMPEG LOGIC: Forcing exact Aspect Ratio and Audio Rates before merging
                 command = [
                     'ffmpeg', '-y', 
                     '-i', video_url, 
                     '-i', outro_path,
                     '-filter_complex', 
-                    "[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[main_v];"
-                    "[1:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[outro_v];"
-                    "[main_v][0:a][outro_v][1:a]concat=n=2:v=1:a=1[v][a]",
+                    "[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1:1,fps=30[main_v];"
+                    "[1:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1:1,fps=30[outro_v];"
+                    "[0:a]aformat=sample_rates=44100:channel_layouts=stereo[main_a];"
+                    "[1:a]aformat=sample_rates=44100:channel_layouts=stereo[outro_a];"
+                    "[main_v][main_a][outro_v][outro_a]concat=n=2:v=1:a=1[v][a]",
                     '-map', '[v]', '-map', '[a]',
                     '-vcodec', 'libx264', '-crf', '34', '-preset', 'ultrafast',
                     output_path
