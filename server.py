@@ -185,7 +185,7 @@ def get_video_info():
         except Exception as e:
             print(f"API Magic Failed, falling back to yt-dlp: {str(e)}")
 
-   # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
+    # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
     ydl_opts = {
         'quiet': True,
         'skip_download': False, 
@@ -211,8 +211,8 @@ def get_video_info():
         ydl_opts['skip_download'] = True
         ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'web']}}
 
-      # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
-      elif is_facebook:
+    # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
+    elif is_facebook:
         ydl_opts['cookiefile'] = 'cookies.txt' 
         ydl_opts['format'] = 'bestvideo+bestaudio/best' # Forced Audio + Video Merge
         ydl_opts['extractor_args'] = {
@@ -226,7 +226,7 @@ def get_video_info():
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Site': 'cross-site',
             'Upgrade-Insecure-Requests': '1'
-        })
+        }) 
 
     # 3. 🟣 INSTAGRAM LOGIC
     elif is_instagram:
