@@ -211,10 +211,22 @@ def get_video_info():
         ydl_opts['skip_download'] = True
         ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'web']}}
 
-    # 2. 🔵 FACEBOOK LOGIC
-    elif is_facebook:
+      # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
+      elif is_facebook:
         ydl_opts['cookiefile'] = 'cookies.txt' 
-        ydl_opts['format'] = 'best[ext=mp4]/best' 
+        ydl_opts['format'] = 'bestvideo+bestaudio/best' # Forced Audio + Video Merge
+        ydl_opts['extractor_args'] = {
+            'facebook': {
+                'api': 'none',          
+                'video_id': 'none'
+            }
+        }
+        ydl_opts['http_headers'].update({
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Site': 'cross-site',
+            'Upgrade-Insecure-Requests': '1'
+        })
 
     # 3. 🟣 INSTAGRAM LOGIC
     elif is_instagram:
