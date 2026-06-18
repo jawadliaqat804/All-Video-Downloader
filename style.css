@@ -26,6 +26,17 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: all 0.3s ease;
+    /* --- New Code Added Below to Stop Horizontal Scroll --- */
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Ensure Ad Banners (iframes) do not break the mobile width */
+iframe {
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* Navbar - Updated for better mobile responsiveness */
