@@ -296,7 +296,7 @@ def get_video_info():
             audio_count = 0 
             best_direct_url = info.get('url')
             
-           best_thumbnail = info.get('thumbnail')
+            best_thumbnail = info.get('thumbnail')
             if info.get('thumbnails'):
                 best_thumbnail = info['thumbnails'][-1]['url'] 
                 
