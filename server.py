@@ -213,6 +213,10 @@ def get_video_info():
 
     # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
+        # 🔥 SMART TRICK: Convert ANY Facebook URL to mbasic to force pre-merged MP4 & bypass modern JS Bot tracking!
+        video_url = video_url.replace('www.facebook.com', 'mbasic.facebook.com')
+        video_url = video_url.replace('m.facebook.com', 'mbasic.facebook.com')
+        video_url = video_url.replace('fb.watch', 'mbasic.facebook.com/watch')
         ydl_opts['cookiefile'] = 'cookies.txt' 
         ydl_opts['format'] = 'bestvideo+bestaudio/best' # Forced Audio + Video Merge
         ydl_opts['extractor_args'] = {
