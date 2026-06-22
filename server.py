@@ -209,28 +209,25 @@ def get_video_info():
         ydl_opts['format'] = 'best'
         ydl_opts['merge_output_format'] = 'mp4'
         ydl_opts['skip_download'] = True
-        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'web']}}
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'ios']}}
 
-    # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
+     # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
-        # 🔥 SMART TRICK: Convert ANY Facebook URL to mbasic to force pre-merged MP4 & bypass modern JS Bot tracking!
-        video_url = video_url.replace('www.facebook.com', 'mbasic.facebook.com')
-        video_url = video_url.replace('m.facebook.com', 'mbasic.facebook.com')
-        video_url = video_url.replace('fb.watch', 'mbasic.facebook.com/watch')
+        # NOTE: Removed mbasic replace logic because Facebook blocks it now (Unsupported URL error)
         ydl_opts['cookiefile'] = 'cookies.txt' 
-        ydl_opts['format'] = 'bestvideo+bestaudio/best' # Forced Audio + Video Merge
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
         ydl_opts['extractor_args'] = {
             'facebook': {
-                'api': 'none',          
-                'video_id': 'none'
+                'api': 'none'
             }
         }
+        # Force desktop headers to bypass mobile login walls
         ydl_opts['http_headers'].update({
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Site': 'cross-site',
-            'Upgrade-Insecure-Requests': '1'
-        }) 
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none'
+        })
 
     # 3. 🟣 INSTAGRAM LOGIC
     elif is_instagram:

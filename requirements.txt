@@ -1,0 +1,7 @@
+Flask
+flask-cors
+requests
+yt-dlp>=2024.05.27
+gunicorn
+
+
