@@ -209,7 +209,7 @@ def get_video_info():
         ydl_opts['format'] = 'best'
         ydl_opts['merge_output_format'] = 'mp4'
         ydl_opts['skip_download'] = True
-        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'ios']}}
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'web', 'mweb', 'ios']}}
 
      # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
