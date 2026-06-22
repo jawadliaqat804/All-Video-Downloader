@@ -206,7 +206,7 @@ def get_video_info():
         ydl_opts['cookiefile'] = 'cookies.txt'
         # Let yt-dlp ask for 'best' to safely bypass YouTube's strict format block
         # Don't worry, info['formats'] will still fetch MP3 streams for our buttons!
-        ydl_opts['format'] = 'best'
+        ydl_opts['format'] = 'bestvideo+bestaudio/best'
         ydl_opts['merge_output_format'] = 'mp4'
         ydl_opts['skip_download'] = True
         ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'web', 'mweb', 'ios']}}
