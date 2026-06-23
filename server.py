@@ -203,13 +203,23 @@ def get_video_info():
 
     # 1. 🔴 YOUTUBE LOGIC
     if is_youtube:
-        ydl_opts['cookiefile'] = 'cookies.txt'
+        # 🔥 FIX 1: REMOVE COOKIES FOR YOUTUBE! 
+        # Using a residential cookie on a cloud server triggers instant bot bans.
+        # Public videos don't need cookies at all.
+        if 'cookiefile' in ydl_opts:
+            del ydl_opts['cookiefile']
+
         # Let yt-dlp ask for 'best' to safely bypass YouTube's strict format block
-        # Don't worry, info['formats'] will still fetch MP3 streams for our buttons!
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
         ydl_opts['merge_output_format'] = 'mp4'
         ydl_opts['skip_download'] = True
-        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android', 'mweb', 'ios']}}
+        
+        # 🔥 FIX 2: ADVANCED BYPASS (No 'web' client, only mobile/TV to avoid bot captchas)
+        ydl_opts['extractor_args'] = {
+            'youtube': {
+                'player_client': ['android', 'tv', 'mweb']
+            }
+        }
 
      # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
