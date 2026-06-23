@@ -190,6 +190,8 @@ def get_video_info():
         'quiet': True,
         'skip_download': False, 
         'nocheckcertificate': True,
+        'impersonate': 'chrome',  # 🔥 NEW JUGAAAD: YouTube will see this as a real Chrome browser!
+        'format': 'bestvideo+bestaudio/best',
         'format': 'bestvideo+bestaudio/best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
         'cookiefile': 'cookies.txt',         # 🔥 FIX: Global Cookies for Private FB/Insta Videos
@@ -217,7 +219,7 @@ def get_video_info():
         # 🔥 FIX 2: ADVANCED BYPASS (No 'web' client, only mobile/TV to avoid bot captchas)
         ydl_opts['extractor_args'] = {
             'youtube': {
-                'player_client': ['android', 'tv', 'mweb']
+                'player_client': ['android_creator', 'tv', 'mweb']
             }
         }
 
