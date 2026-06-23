@@ -127,70 +127,148 @@ def get_video_info():
     # 🧹 UNIVERSAL SAFAI CHAT STRICT FILTER (APPLIES TO ALL PLATFORMS) 🧹
   
 
-    if is_facebook or is_instagram or is_youtube:
-        try:
-
-            # 🔥 FIX: Main Cobalt API (Fixes Insta Empty Media & YT Audio automatically)
-            api_endpoint = "https://api.cobalt.tools/api/json"
-            headers = {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Origin": "https://cobalt.tools",
-                "Referer": "https://cobalt.tools/"
-            }
-            payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
-            
-            api_res = requests.post(api_endpoint, json=payload, headers=headers, timeout=15)
-            
-            if api_res.status_code == 200:
-                data = api_res.json()
+    # 🔥 MASTER NEW LOGIC (Multi-API Fallback for YOUTUBE ONLY)
+    if is_youtube:
+        # 🚀 JUGAAAD: 3 mukhtalif APIs ki list. Ek fail hogi to doosri chalegi!
+        api_endpoints = [
+            "https://api.cobalt.tools/api/json",   # API 1 (Main)
+            "https://co.wuk.sh/api/json",          # API 2 (Backup 1)
+            "https://cobalt.qwyre.com/api/json"    # API 3 (Backup 2)
+        ]
+        
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        }
+        payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
+        
+        video_found = False
+        
+        for endpoint in api_endpoints:
+            try:
+                api_res = requests.post(endpoint, json=payload, headers=headers, timeout=15)
                 
-                # 🧹 SAFAI CHAT STRICT FILTER (TITLE CHECK) 🧹
-                title = data.get('title', '').lower()
-                if any(word in title for word in bad_words):
-                    return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
+                if api_res.status_code == 200:
+                    data = api_res.json()
+                    
+                    # 🧹 SAFAI CHAT STRICT FILTER (TITLE CHECK) 🧹
+                    title = data.get('title', '').lower()
+                    if any(word in title for word in bad_words):
+                        return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
 
-                direct_url = data.get('url')
-                if not direct_url and data.get('picker'):
-                    direct_url = data.get('picker')[0].get('url')
+                    direct_url = data.get('url')
+                    if not direct_url and data.get('picker'):
+                        direct_url = data.get('picker')[0].get('url')
                     
-                if direct_url:
-                    api_thumb = data.get('thumbnail')
-                    thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
-                    
-                    # 🔥 NEW YOUTUBE THUMBNAIL MAGIC: Extract video ID and get official HD thumbnail directly
-                    if is_youtube:
+                    if direct_url:
+                        # Video mil gayi! Thumbnail banayen aur user ko bhej den.
                         video_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', video_url)
-                        if video_id_match:
-                            thumb_url = f"https://img.youtube.com/vi/{video_id_match.group(1)}/hqdefault.jpg"
-                    
-                    formats = [{"label": "Standard Download (Merged Video)", "url": direct_url}]
-                    
-                    # 🔥 FIX: Get Audio MP3 Format explicitly!
-                    try:
-                        audio_payload = {"url": video_url, "isAudioOnly": True}
-                        audio_res = requests.post(api_endpoint, json=audio_payload, headers=headers, timeout=10)
-                        if audio_res.status_code == 200 and audio_res.json().get('url'):
-                            formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
-                    except:
-                        pass
+                        thumb_url = f"https://img.youtube.com/vi/{video_id_match.group(1)}/hqdefault.jpg" if video_id_match else "https://cdn-icons-png.flaticon.com/512/174/174855.png"
+                        
+                        formats = [{"label": "Video (HD) - Fast Download", "url": direct_url}]
+                        
+                        # Audio check
+                        try:
+                            audio_payload = {"url": video_url, "isAudioOnly": True}
+                            audio_res = requests.post(endpoint, json=audio_payload, headers=headers, timeout=10)
+                            if audio_res.status_code == 200 and audio_res.json().get('url'):
+                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                        except:
+                            pass
+                        
+                        video_found = True
+                        return jsonify({
+                            "success": True,
+                            "title": title if title else "YouTube Video (Auto Bypass)",
+                            "thumbnail": thumb_url, 
+                            "formats": formats
+                        })
+            except Exception as e:
+                print(f"API Failed ({endpoint}): {str(e)}")
+                continue # Agar ye API fail ho gayi, to loop ko agay barhao aur agli try karo
+                
+        # Agar teeno APIs block ho jayen
+        if not video_found:
+            return jsonify({"error": "Server is very busy right now. Please try again after a few minutes!"}), 400
 
-                    return jsonify({
-                        "success": True,
-                        "title": title if title else "Video Ready!",
-                        "thumbnail": thumb_url, 
-                        "formats": formats
-                    })
-        except Exception as e:
-            print(f"API Magic Failed, falling back to yt-dlp: {str(e)}")
+    # 🟢 LAYER 1: UNIVERSAL API FOR FB & INSTA
+    # 🟢 LAYER 1: MULTI-API FALLBACK FOR FB & INSTA (For Full Audio Video)
+    elif is_facebook or is_instagram:
+        # 🚀 3 APIs for Facebook/Insta just like YouTube!
+        api_endpoints = [
+            "https://api.cobalt.tools/api/json",
+            "https://co.wuk.sh/api/json",
+            "https://cobalt.qwyre.com/api/json"
+        ]
+        
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        }
+        payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
+        
+        video_found = False
+        
+        for endpoint in api_endpoints:
+            try:
+                api_res = requests.post(endpoint, json=payload, headers=headers, timeout=15)
+                
+                if api_res.status_code == 200:
+                    data = api_res.json()
+                    
+                    # 🧹 SAFAI CHAT STRICT FILTER 🧹
+                    title = data.get('title', '').lower()
+                    if any(word in title for word in bad_words):
+                        return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
 
-    # 🔴 LAYER 2: YT-DLP FALLBACK (Updated for Video + Audio)
+                    direct_url = data.get('url')
+                    if not direct_url and data.get('picker'):
+                        direct_url = data.get('picker')[0].get('url')
+                    
+                    if direct_url:
+                        api_thumb = data.get('thumbnail')
+                        if is_facebook:
+                            thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
+                        elif is_instagram:
+                            # 🔥 INSTA THUMBNAIL MAGIC: Bypass 403 Forbidden using a free image proxy!
+                            if api_thumb:
+                                thumb_url = f"https://wsrv.nl/?url={api_thumb}"
+                            else:
+                                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+                        
+                        # Full Video with Audio
+                        formats = [{"label": "Video (HD) - Fast Download (With Audio)", "url": direct_url}]
+                        
+                        # Audio Only
+                        try:
+                            audio_payload = {"url": video_url, "isAudioOnly": True}
+                            audio_res = requests.post(endpoint, json=audio_payload, headers=headers, timeout=10)
+                            if audio_res.status_code == 200 and audio_res.json().get('url'):
+                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                        except:
+                            pass
+                        
+                        video_found = True
+                        platform_name = "Facebook" if is_facebook else "Instagram"
+                        return jsonify({
+                            "success": True,
+                            "title": title if title else f"{platform_name} Video Ready!",
+                            "thumbnail": thumb_url, 
+                            "formats": formats
+                        })
+            except Exception as e:
+                print(f"FB/Insta API Failed ({endpoint}): {str(e)}")
+                continue 
+                
+        if not video_found:
+            print("All FB/Insta APIs failed, falling back to yt-dlp...")
     ydl_opts = {
         'quiet': True,
         'skip_download': False, 
         'nocheckcertificate': True,
-        
+        'impersonate': 'chrome',  # 🔥 NEW JUGAAAD: YouTube will see this as a real Chrome browser!
         'format': 'bestvideo+bestaudio/best',
         'format': 'bestvideo+bestaudio/best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
@@ -203,28 +281,8 @@ def get_video_info():
         }
     }
 
-    # 1. 🔴 YOUTUBE LOGIC
-    if is_youtube:
-        # 🔥 FIX 1: REMOVE COOKIES FOR YOUTUBE! 
-        # Using a residential cookie on a cloud server triggers instant bot bans.
-        # Public videos don't need cookies at all.
-        if 'cookiefile' in ydl_opts:
-            del ydl_opts['cookiefile']
-
-        # Let yt-dlp ask for 'best' to safely bypass YouTube's strict format block
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-        ydl_opts['merge_output_format'] = 'mp4'
-        ydl_opts['skip_download'] = True
-        
-        # 🔥 FIX 2: ADVANCED BYPASS (No 'web' client, only mobile/TV to avoid bot captchas)
-        ydl_opts['extractor_args'] = {
-            'youtube': {
-                'player_client': ['android_creator', 'tv', 'mweb']
-            }
-        }
-
-     # 2. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
-    elif is_facebook:
+    # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
+    if is_facebook:
         # NOTE: Removed mbasic replace logic because Facebook blocks it now (Unsupported URL error)
         ydl_opts['cookiefile'] = 'cookies.txt' 
         ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
@@ -325,6 +383,10 @@ def get_video_info():
             if info.get('thumbnails'):
                 best_thumbnail = info['thumbnails'][-1]['url'] 
                 
+            # 🔥 INSTA THUMBNAIL MAGIC (yt-dlp fallback ke liye proxy)
+            if is_instagram and best_thumbnail and 'http' in best_thumbnail:
+                best_thumbnail = f"https://wsrv.nl/?url={best_thumbnail}"
+                
             # 🔥 FIX: Fallback for missing Instagram/FB Thumbnails
             if not best_thumbnail or best_thumbnail == '':
                 if is_instagram:
@@ -365,7 +427,7 @@ def get_video_info():
                     else:
                          # 🔥 FIX: Explicitly label Mute vs Audio videos for Facebook/YouTube!
                         if acodec == 'none':
-                            label = f"Video - {height}p{size_tag} (MUTE/No Audio)"
+                            continue  # Completely remove Mute videos from the list
                         else:
                             label = f"Video - {height}p{size_tag} (With Audio)"
                 
