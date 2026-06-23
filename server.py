@@ -129,11 +129,13 @@ def get_video_info():
 
     # 🔥 MASTER NEW LOGIC (Multi-API Fallback for YOUTUBE ONLY)
     if is_youtube:
-        # 🚀 JUGAAAD: 3 mukhtalif APIs ki list. Ek fail hogi to doosri chalegi!
+        # 🚀 JUGAAAD: 5 mukhtalif APIs ki list. Ek fail hogi to doosri chalegi!
         api_endpoints = [
-            "https://api.cobalt.tools/api/json",   # API 1 (Main)
-            "https://co.wuk.sh/api/json",          # API 2 (Backup 1)
-            "https://cobalt.qwyre.com/api/json"    # API 3 (Backup 2)
+            "https://api.cobalt.tools/api/json",       # API 1 (Main)
+            "https://co.wuk.sh/api/json",              # API 2 (Backup 1)
+            "https://cobalt.qwyre.com/api/json",       # API 3 (Backup 2)
+            "https://api.cobalt.bepass.org/api/json",  # API 4 (Backup 3)
+            "https://cobalt.cachyos.org/api/json"      # API 5 (Backup 4)
         ]
         
         headers = {
@@ -268,8 +270,7 @@ def get_video_info():
         'quiet': True,
         'skip_download': False, 
         'nocheckcertificate': True,
-        'impersonate': 'chrome',  # 🔥 NEW JUGAAAD: YouTube will see this as a real Chrome browser!
-        'format': 'bestvideo+bestaudio/best',
+       
         'format': 'bestvideo+bestaudio/best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
         'cookiefile': 'cookies.txt',         # 🔥 FIX: Global Cookies for Private FB/Insta Videos
