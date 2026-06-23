@@ -190,7 +190,7 @@ def get_video_info():
         'quiet': True,
         'skip_download': False, 
         'nocheckcertificate': True,
-        'impersonate': 'chrome',  # 🔥 NEW JUGAAAD: YouTube will see this as a real Chrome browser!
+        
         'format': 'bestvideo+bestaudio/best',
         'format': 'bestvideo+bestaudio/best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
