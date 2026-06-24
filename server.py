@@ -121,21 +121,14 @@ def get_video_info():
     is_instagram = 'instagram.com' in video_url.lower()
     is_tiktok = 'tiktok.com' in video_url.lower()
 
-  # ==========================================
-    # 🟢 LAYER 1: UNIVERSAL API FOR FB, INSTA & YOUTUBE (The TikTok Formula)
     # ==========================================
-    # 🧹 UNIVERSAL SAFAI CHAT STRICT FILTER (APPLIES TO ALL PLATFORMS) 🧹
-  
-
-    # 🔥 MASTER NEW LOGIC (Multi-API Fallback for YOUTUBE ONLY)
-    if is_youtube:
-        # 🚀 JUGAAAD: 5 mukhtalif APIs ki list. Ek fail hogi to doosri chalegi!
+    # 🟢 LAYER 1: MULTI-API FALLBACK FOR FB & INSTA
+    # ==========================================
+    if is_facebook or is_instagram:
         api_endpoints = [
-            "https://api.cobalt.tools/api/json",       # API 1 (Main)
-            "https://co.wuk.sh/api/json",              # API 2 (Backup 1)
-            "https://cobalt.qwyre.com/api/json",       # API 3 (Backup 2)
-            "https://api.cobalt.bepass.org/api/json",  # API 4 (Backup 3)
-            "https://cobalt.cachyos.org/api/json"      # API 5 (Backup 4)
+            "https://api.cobalt.tools/api/json",
+            "https://co.wuk.sh/api/json",
+            "https://cobalt.qwyre.com/api/json"
         ]
         
         headers = {
@@ -154,48 +147,48 @@ def get_video_info():
                 if api_res.status_code == 200:
                     data = api_res.json()
                     
-                    # 🧹 SAFAI CHAT STRICT FILTER (TITLE CHECK) 🧹
+                    # 🧹 SAFAI CHAT STRICT FILTER 🧹
                     title = data.get('title', '').lower()
                     if any(word in title for word in bad_words):
-                        return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
+                        return jsonify({"error": "System Alert: Restricted Content Blocked!"})
 
                     direct_url = data.get('url')
                     if not direct_url and data.get('picker'):
                         direct_url = data.get('picker')[0].get('url')
                     
                     if direct_url:
-                        # Video mil gayi! Thumbnail banayen aur user ko bhej den.
-                        video_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', video_url)
-                        thumb_url = f"https://img.youtube.com/vi/{video_id_match.group(1)}/hqdefault.jpg" if video_id_match else "https://cdn-icons-png.flaticon.com/512/174/174855.png"
+                        api_thumb = data.get('thumbnail')
+                        if is_facebook:
+                            thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
+                        elif is_instagram:
+                            if api_thumb:
+                                thumb_url = f"https://wsrv.nl/?url={api_thumb}"
+                            else:
+                                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
                         
-                        formats = [{"label": "Video (HD) - Fast Download", "url": direct_url}]
+                        # 🔥 CLEAN LABELS: No ugly names, just simple and professional
+                        formats = [{"label": "Video (HD)", "url": direct_url}]
                         
-                        # Audio check
                         try:
                             audio_payload = {"url": video_url, "isAudioOnly": True}
                             audio_res = requests.post(endpoint, json=audio_payload, headers=headers, timeout=10)
                             if audio_res.status_code == 200 and audio_res.json().get('url'):
-                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                                formats.append({"label": "Audio Only", "url": audio_res.json().get('url')})
                         except:
                             pass
                         
                         video_found = True
                         return jsonify({
                             "success": True,
-                            "title": title if title else "YouTube Video (Auto Bypass)",
+                            "title": title if title else "Video Ready!",
                             "thumbnail": thumb_url, 
                             "formats": formats
                         })
             except Exception as e:
-                print(f"API Failed ({endpoint}): {str(e)}")
-                continue # Agar ye API fail ho gayi, to loop ko agay barhao aur agli try karo
+                continue 
                 
-        # 🔧 FIX (Step 1): Cobalt's public /api/json (v7) endpoints were shut down
-        # by the Cobalt team in Nov 2024 — they will ALWAYS fail now. Instead of
-        # dying with "Server busy", fall through to the yt-dlp engine below
-        # (same pattern already used for Facebook/Instagram).
         if not video_found:
-            print("All YouTube Cobalt APIs failed (endpoints are deprecated), falling back to yt-dlp...")
+            print("system is busy please try again later...")
 
     # 🟢 LAYER 1: UNIVERSAL API FOR FB & INSTA
     # 🟢 LAYER 1: MULTI-API FALLBACK FOR FB & INSTA (For Full Audio Video)
@@ -268,7 +261,7 @@ def get_video_info():
                 continue 
                 
         if not video_found:
-            print("All FB/Insta APIs failed, falling back to yt-dlp...")
+            print("system is busy please try again later...")
     ydl_opts = {
         'quiet': True,
         'skip_download': False, 
@@ -284,12 +277,23 @@ def get_video_info():
             'Sec-Fetch-Mode': 'navigate'
         }
     }
+    # 1. 🔴 YOUTUBE LOGIC (NEW REVISED CLIENT BYPASS)
+    if is_youtube:
+        if 'cookiefile' in ydl_opts:
+            del ydl_opts['cookiefile']  # Remove cookies to avoid bans
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        ydl_opts['extractor_args'] = {
+            'youtube': {
+                'player_client': ['ios', 'mweb'],
+                'skip': ['webpage', 'authcheck']
+            }
+        }
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     if is_facebook:
         # NOTE: Removed mbasic replace logic because Facebook blocks it now (Unsupported URL error)
         ydl_opts['cookiefile'] = 'cookies.txt' 
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+best'
         ydl_opts['extractor_args'] = {
             'facebook': {
                 'api': 'none'
@@ -314,7 +318,7 @@ def get_video_info():
         ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
         ydl_opts['format'] = 'best'
 
-    # 5. ⚪ OTHER PLATFORMS (YouTube falls here too)
+    # 5. ⚪ OTHER PLATFORMS
     else:
         ydl_opts['format'] = 'best'
 
@@ -408,8 +412,8 @@ def get_video_info():
                 ext = f.get('ext', 'mp4')
                 protocol = f.get('protocol', '')
                 
-                # 🔥 FIX 2: Added 'dash' & 'dashy' protocols! FB/YT videos are DASH, without this they get skipped!
-                if protocol not in ['http', 'https', 'm3u8', 'm3u8_native', 'dash', 'dashy', 'dash_native']:
+                # 🔥 REVISED PROTOCOL FILTER (FB Dash segments fix)
+                if protocol not in ['http', 'https', 'm3u8', 'm3u8_native', 'dash', 'dashy', 'dash_native', 'http_dash_segments']:
                     continue
                 
                 filesize = f.get('filesize') or f.get('filesize_approx') or 0
@@ -451,7 +455,7 @@ def get_video_info():
                 mb_size_best = round((info.get('filesize') or info.get('filesize_approx') or 0) / (1024 * 1024), 1)
                 size_tag_best = f" ({mb_size_best} MB)" if mb_size_best > 0 else ""
                 if not any(d['url'] == best_direct_url for d in clean_formats):
-                    clean_formats.append({"label": f"Standard Download (Merged Video){size_tag_best}", "url": best_direct_url})
+                    clean_formats.append({"label": f"Video (Best Quality){size_tag_best}", "url": best_direct_url})
             
             clean_formats.reverse()
             
