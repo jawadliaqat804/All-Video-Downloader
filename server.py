@@ -230,14 +230,15 @@ def get_video_info():
                         if is_facebook:
                             thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
                         elif is_instagram:
-                            # 🔥 INSTA THUMBNAIL MAGIC: Bypass 403 Forbidden using a free image proxy!
+                            # 🔥 INSTA THUMBNAIL MAGIC: Bypass 403 Forbidden using DuckDuckGo proxy!
                             if api_thumb:
-                                thumb_url = f"https://wsrv.nl/?url={api_thumb}"
+                                thumb_url = f"https://external-content.duckduckgo.com/iu/?u={api_thumb}"
                             else:
                                 thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
                         
                         # Full Video with Audio
-                        formats = [{"label": "Video (HD) - Fast Download (With Audio)", "url": direct_url}]
+                        # 🔥 FIX: More professional labeling for direct API downloads
+                        formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
                         
                         # Audio Only
                         try:
@@ -282,18 +283,20 @@ def get_video_info():
         if 'cookiefile' in ydl_opts:
             del ydl_opts['cookiefile']  # Remove cookies to avoid bans
         ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        # 🔥 FIX: Updated player clients to bypass bot detection safely
         ydl_opts['extractor_args'] = {
             'youtube': {
-                'player_client': ['ios', 'mweb'],
-                'skip': ['webpage', 'authcheck']
+                'player_client': ['android', 'web'],
+                'player_skip': ['js', 'configs', 'webpage']
             }
-        }
+        }\
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     if is_facebook:
         # NOTE: Removed mbasic replace logic because Facebook blocks it now (Unsupported URL error)
         ydl_opts['cookiefile'] = 'cookies.txt' 
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+best'
+        # 🔥 FIX: Added bestaudio to ensure sound is merged with video properly
+        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
         ydl_opts['extractor_args'] = {
             'facebook': {
                 'api': 'none'
@@ -393,7 +396,8 @@ def get_video_info():
                 
             # 🔥 INSTA THUMBNAIL MAGIC (yt-dlp fallback ke liye proxy)
             if is_instagram and best_thumbnail and 'http' in best_thumbnail:
-                best_thumbnail = f"https://wsrv.nl/?url={best_thumbnail}"
+                # 🔥 FIX: Switched to DuckDuckGo proxy for better Instagram CDN support
+                best_thumbnail = f"https://external-content.duckduckgo.com/iu/?u={best_thumbnail}"
                 
             # 🔥 FIX: Fallback for missing Instagram/FB Thumbnails
             if not best_thumbnail or best_thumbnail == '':
@@ -454,8 +458,10 @@ def get_video_info():
             if best_direct_url:
                 mb_size_best = round((info.get('filesize') or info.get('filesize_approx') or 0) / (1024 * 1024), 1)
                 size_tag_best = f" ({mb_size_best} MB)" if mb_size_best > 0 else ""
+                # 🔥 FIX: Dynamically fetching exact resolution for the Best Quality label
+                best_height = info.get('height') or 'HD'
                 if not any(d['url'] == best_direct_url for d in clean_formats):
-                    clean_formats.append({"label": f"Video (Best Quality){size_tag_best}", "url": best_direct_url})
+                    clean_formats.append({"label": f"Video ({best_height}p){size_tag_best}", "url": best_direct_url})
             
             clean_formats.reverse()
             
