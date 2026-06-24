@@ -114,155 +114,116 @@ def get_video_info():
                 return jsonify({"error": "TikTok API Failed. Video might be private."}), 400
         except Exception as e:
             return jsonify({"error": f"TikTok API Error: {str(e)}"}), 500
-# 🛡️ PROTECTIVE SHIELD: THE "API MAGIC" LAYER (Like TikTok)
+       # 🛡️ PROTECTIVE SHIELD: THE "API MAGIC" LAYER
     # Identifying the platform
     is_youtube = 'youtube.com' in video_url.lower() or 'youtu.be' in video_url.lower()
     is_facebook = 'facebook.com' in video_url.lower() or 'fb.watch' in video_url.lower() or 'fb.com' in video_url.lower()
     is_instagram = 'instagram.com' in video_url.lower()
     is_tiktok = 'tiktok.com' in video_url.lower()
 
+    # 🚀 SHARED API CONFIGURATION (یہ سب کے لیے مشترکہ ہے)
+    api_endpoints = [
+        "https://api.cobalt.tools/api/json",
+        "https://co.wuk.sh/api/json",
+        "https://cobalt.qwyre.com/api/json"
+    ]
+    api_headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    }
+    api_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
+
     # ==========================================
-    # 🟢 LAYER 1: MULTI-API FALLBACK FOR FB & INSTA
+    # 🔴 LAYER 1: YOUTUBE API ONLY (صرف یوٹیوب کا بلاک)
     # ==========================================
-    if is_facebook or is_instagram:
-        api_endpoints = [
-            "https://api.cobalt.tools/api/json",
-            "https://co.wuk.sh/api/json",
-            "https://cobalt.qwyre.com/api/json"
-        ]
-        
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        }
-        payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
-        
-        video_found = False
-        
+    if is_youtube:
         for endpoint in api_endpoints:
             try:
-                api_res = requests.post(endpoint, json=payload, headers=headers, timeout=15)
-                
-                if api_res.status_code == 200:
-                    data = api_res.json()
-                    
-                    # 🧹 SAFAI CHAT STRICT FILTER 🧹
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
                     title = data.get('title', '').lower()
                     if any(word in title for word in bad_words):
-                        return jsonify({"error": "System Alert: Restricted Content Blocked!"})
-
-                    direct_url = data.get('url')
-                    if not direct_url and data.get('picker'):
-                        direct_url = data.get('picker')[0].get('url')
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
                     
+                    direct_url = data.get('url')
                     if direct_url:
                         api_thumb = data.get('thumbnail')
-                        if is_facebook:
-                            thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
-                        elif is_instagram:
-                            if api_thumb:
-                                thumb_url = f"https://wsrv.nl/?url={api_thumb}"
-                            else:
-                                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
-                        
-                        # 🔥 CLEAN LABELS: No ugly names, just simple and professional
-                        formats = [{"label": "Video (HD)", "url": direct_url}]
-                        
-                        try:
-                            audio_payload = {"url": video_url, "isAudioOnly": True}
-                            audio_res = requests.post(endpoint, json=audio_payload, headers=headers, timeout=10)
-                            if audio_res.status_code == 200 and audio_res.json().get('url'):
-                                formats.append({"label": "Audio Only", "url": audio_res.json().get('url')})
-                        except:
-                            pass
-                        
-                        video_found = True
-                        return jsonify({
-                            "success": True,
-                            "title": title if title else "Video Ready!",
-                            "thumbnail": thumb_url, 
-                            "formats": formats
-                        })
-            except Exception as e:
-                continue 
-                
-        if not video_found:
-            print("system is busy please try again later...")
-
-    # 🟢 LAYER 1: UNIVERSAL API FOR FB & INSTA
-    # 🟢 LAYER 1: MULTI-API FALLBACK FOR FB & INSTA (For Full Audio Video)
-    elif is_facebook or is_instagram:
-        # 🚀 3 APIs for Facebook/Insta just like YouTube!
-        api_endpoints = [
-            "https://api.cobalt.tools/api/json",
-            "https://co.wuk.sh/api/json",
-            "https://cobalt.qwyre.com/api/json"
-        ]
-        
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        }
-        payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
-        
-        video_found = False
-        
-        for endpoint in api_endpoints:
-            try:
-                api_res = requests.post(endpoint, json=payload, headers=headers, timeout=15)
-                
-                if api_res.status_code == 200:
-                    data = api_res.json()
-                    
-                    # 🧹 SAFAI CHAT STRICT FILTER 🧹
-                    title = data.get('title', '').lower()
-                    if any(word in title for word in bad_words):
-                        return jsonify({"error": "System Alert: Music/Restricted Content Blocked! (Safai Chat Rules)"})
-
-                    direct_url = data.get('url')
-                    if not direct_url and data.get('picker'):
-                        direct_url = data.get('picker')[0].get('url')
-                    
-                    if direct_url:
-                        api_thumb = data.get('thumbnail')
-                        if is_facebook:
-                            thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
-                        elif is_instagram:
-                            # 🔥 INSTA THUMBNAIL MAGIC: Bypass 403 Forbidden using DuckDuckGo proxy!
-                            if api_thumb:
-                                thumb_url = f"https://external-content.duckduckgo.com/iu/?u={api_thumb}"
-                            else:
-                                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
-                        
-                        # Full Video with Audio
-                        # 🔥 FIX: More professional labeling for direct API downloads
+                        thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
                         formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
                         
-                        # Audio Only
                         try:
-                            audio_payload = {"url": video_url, "isAudioOnly": True}
-                            audio_res = requests.post(endpoint, json=audio_payload, headers=headers, timeout=10)
+                            audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
                             if audio_res.status_code == 200 and audio_res.json().get('url'):
                                 formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
-                        except:
-                            pass
+                        except: pass
                         
-                        video_found = True
-                        platform_name = "Facebook" if is_facebook else "Instagram"
-                        return jsonify({
-                            "success": True,
-                            "title": title if title else f"{platform_name} Video Ready!",
-                            "thumbnail": thumb_url, 
-                            "formats": formats
-                        })
-            except Exception as e:
-                print(f"FB/Insta API Failed ({endpoint}): {str(e)}")
-                continue 
+                        return jsonify({"success": True, "title": title if title else "YouTube Video Ready!", "thumbnail": thumb_url, "formats": formats})
+            except Exception as e: continue
+
+    # ==========================================
+    # 🔵 LAYER 2: FACEBOOK API ONLY (صرف فیس بک کا بلاک)
+    # ==========================================
+    elif is_facebook:
+        for endpoint in api_endpoints:
+            try:
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
+                    title = data.get('title', '').lower()
+                    if any(word in title for word in bad_words):
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                    
+                    direct_url = data.get('url')
+                    if not direct_url and data.get('picker'): direct_url = data.get('picker')[0].get('url')
+                    
+                    if direct_url:
+                        api_thumb = data.get('thumbnail')
+                        thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/124/124010.png'
+                        formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
+                        
+                        try:
+                            audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
+                            if audio_res.status_code == 200 and audio_res.json().get('url'):
+                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                        except: pass
+                        
+                        return jsonify({"success": True, "title": title if title else "Facebook Video Ready!", "thumbnail": thumb_url, "formats": formats})
+            except Exception as e: continue
+
+    # ==========================================
+    # 🟣 LAYER 3: INSTAGRAM API ONLY (صرف انسٹاگرام کا بلاک)
+    # ==========================================
+    elif is_instagram:
+        for endpoint in api_endpoints:
+            try:
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
+                    title = data.get('title', '').lower()
+                    if any(word in title for word in bad_words):
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                    
+                    direct_url = data.get('url')
+                    if not direct_url and data.get('picker'): direct_url = data.get('picker')[0].get('url')
+                    
+                    if direct_url:
+                        api_thumb = data.get('thumbnail')
+                        # 🔥 DuckDuckGo Proxy for Insta Thumbnail to avoid 403 Forbidden
+                        thumb_url = f"https://external-content.duckduckgo.com/iu/?u={api_thumb}" if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+                        formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
+                        
+                        try:
+                            audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
+                            if audio_res.status_code == 200 and audio_res.json().get('url'):
+                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
+                        except: pass
+                        
+                        return jsonify({"success": True, "title": title if title else "Instagram Video Ready!", "thumbnail": thumb_url, "formats": formats})
+            except Exception as e: continue
                 
-        if not video_found:
-            print("system is busy please try again later...")
+    
     ydl_opts = {
         'quiet': True,
         'skip_download': False, 
@@ -289,7 +250,7 @@ def get_video_info():
                 'player_client': ['android', 'web'],
                 'player_skip': ['js', 'configs', 'webpage']
             }
-        }\
+        }
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     if is_facebook:
