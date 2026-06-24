@@ -12,6 +12,22 @@ from flask_cors import CORS
 import yt_dlp
 import re
 
+# --- Proxy Rotation Setup ---
+# You can add more public proxies here or use a service like BrightData/IPRoyal
+PROXY_LIST = [
+    {"http": "http://195.158.8.123:3128"},
+      {"http": "http://117.236.124.166:3128"},
+        {"http": "http://79.137.205.130:7443"},
+          {"http": "http://138.124.113.102:7443"},
+    # Add more proxies here to rotate
+]
+
+import random
+
+def get_proxy():
+    # If PROXY_LIST is empty, returns None (Direct connection)
+    return random.choice(PROXY_LIST) if PROXY_LIST else None
+
 # Configure Flask to look for templates in the current root directory (.)
 app = Flask(__name__, template_folder=".")
 # This allows our JS and Python to talk to each other
@@ -140,7 +156,7 @@ def get_video_info():
     if is_youtube:
         for endpoint in api_endpoints:
             try:
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
                 if res.status_code == 200:
                     data = res.json()
                     title = data.get('title', '').lower()
@@ -162,13 +178,15 @@ def get_video_info():
                         return jsonify({"success": True, "title": title if title else "YouTube Video Ready!", "thumbnail": thumb_url, "formats": formats})
             except Exception as e: continue
 
+
+
     # ==========================================
     # 🔵 LAYER 2: FACEBOOK API ONLY (صرف فیس بک کا بلاک)
     # ==========================================
     elif is_facebook:
         for endpoint in api_endpoints:
             try:
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
                 if res.status_code == 200:
                     data = res.json()
                     title = data.get('title', '').lower()
@@ -198,7 +216,7 @@ def get_video_info():
     elif is_instagram:
         for endpoint in api_endpoints:
             try:
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
                 if res.status_code == 200:
                     data = res.json()
                     title = data.get('title', '').lower()
