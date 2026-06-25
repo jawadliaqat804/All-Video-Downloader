@@ -246,10 +246,10 @@ def get_video_info():
     
     ydl_opts = {
         'quiet': True,
-        'skip_download': False, 
+        'skip_download': True, 
         'nocheckcertificate': True,
        
-        'format': 'bestvideo+bestaudio/best', # This forces both streams to download
+        'format': 'best', # This forces both streams to download
         'merge_output_format': 'mp4',        # This merges them automatically
         'cookiefile': 'cookies.txt',         # 🔥 FIX: Global Cookies for Private FB/Insta Videos
         'http_headers': {
@@ -264,7 +264,7 @@ def get_video_info():
         # 🔥 FIX: Re-enabled cookies to fix "Sign in to confirm you're not a bot" error
         ydl_opts['cookiefile'] = 'cookies.txt'
         # 🔥 FIX: Simplified format to safely grab both video and audio streams
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        ydl_opts['format'] = 'best'
         # 🔥 FIX: Updated player clients to bypass bot detection safely (iOS works best currently)
         ydl_opts['extractor_args'] = {
             'youtube': {
@@ -273,10 +273,10 @@ def get_video_info():
         }
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
-    if is_facebook:
+    elif is_facebook:
         ydl_opts['cookiefile'] = 'cookies.txt' 
         # 🔥 FIX: Removed strict [ext=mp4] constraints so it downloads whatever stream is actually available
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        ydl_opts['format'] = 'best'
         # 🔥 FIX: Removed 'api': 'none' which was causing the "Cannot parse data" crash
         ydl_opts['extractor_args'] = {
             'facebook': {}
