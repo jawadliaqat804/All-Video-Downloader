@@ -228,8 +228,10 @@ def get_video_info():
                     
                     if direct_url:
                         api_thumb = data.get('thumbnail')
-                        # 🔥 DuckDuckGo Proxy for Insta Thumbnail to avoid 403 Forbidden
-                        thumb_url = f"https://external-content.duckduckgo.com/iu/?u={api_thumb}" if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+                        # 🔥 FIX: Switched from DuckDuckGo to wsrv.nl proxy for better Instagram CDN bypass
+                        import urllib.parse
+                        encoded_thumb = urllib.parse.quote(api_thumb, safe='') if api_thumb else ''
+                        thumb_url = f"https://wsrv.nl/?url={encoded_thumb}" if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
                         formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
                         
                         try:
@@ -259,27 +261,25 @@ def get_video_info():
     }
     # 1. 🔴 YOUTUBE LOGIC (NEW REVISED CLIENT BYPASS)
     if is_youtube:
-        if 'cookiefile' in ydl_opts:
-            del ydl_opts['cookiefile']  # Remove cookies to avoid bans
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-        # 🔥 FIX: Updated player clients to bypass bot detection safely
+        # 🔥 FIX: Re-enabled cookies to fix "Sign in to confirm you're not a bot" error
+        ydl_opts['cookiefile'] = 'cookies.txt'
+        # 🔥 FIX: Simplified format to safely grab both video and audio streams
+        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        # 🔥 FIX: Updated player clients to bypass bot detection safely (iOS works best currently)
         ydl_opts['extractor_args'] = {
             'youtube': {
-                'player_client': ['android', 'web'],
-                'player_skip': ['js', 'configs', 'webpage']
+                'player_client': ['ios', 'android', 'web']
             }
         }
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     if is_facebook:
-        # NOTE: Removed mbasic replace logic because Facebook blocks it now (Unsupported URL error)
         ydl_opts['cookiefile'] = 'cookies.txt' 
-        # 🔥 FIX: Added bestaudio to ensure sound is merged with video properly
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
+        # 🔥 FIX: Removed strict [ext=mp4] constraints so it downloads whatever stream is actually available
+        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        # 🔥 FIX: Removed 'api': 'none' which was causing the "Cannot parse data" crash
         ydl_opts['extractor_args'] = {
-            'facebook': {
-                'api': 'none'
-            }
+            'facebook': {}
         }
         # Force desktop headers to bypass mobile login walls
         ydl_opts['http_headers'].update({
@@ -375,8 +375,10 @@ def get_video_info():
                 
             # 🔥 INSTA THUMBNAIL MAGIC (yt-dlp fallback ke liye proxy)
             if is_instagram and best_thumbnail and 'http' in best_thumbnail:
-                # 🔥 FIX: Switched to DuckDuckGo proxy for better Instagram CDN support
-                best_thumbnail = f"https://external-content.duckduckgo.com/iu/?u={best_thumbnail}"
+                # 🔥 FIX: Switched to wsrv.nl proxy for reliable Instagram thumbnail loading
+                import urllib.parse
+                encoded_thumb = urllib.parse.quote(best_thumbnail, safe='')
+                best_thumbnail = f"https://wsrv.nl/?url={encoded_thumb}"
                 
             # 🔥 FIX: Fallback for missing Instagram/FB Thumbnails
             if not best_thumbnail or best_thumbnail == '':
