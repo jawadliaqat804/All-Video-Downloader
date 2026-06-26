@@ -260,18 +260,18 @@ def get_video_info():
         }
     }
     # ==========================================
-    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 NEW RAPID-API BYPASS 🔥)
+    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 RAPID-API BYPASS)
     # ==========================================
     if is_youtube:
         try:
-            # 1. Smartly Extract YouTube Video ID from any kind of link (Shorts, youtu.be, watch?v=)
-            import re
-            yt_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', video_url)
+            # 🔥 FIX: Removed local 'import re' to fix the Instagram/Facebook crash!
+            # 🔥 FIX: Upgraded Regex to flawlessly catch IDs from Shorts, youtu.be, and regular links
+            yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
             
             if yt_id_match:
                 video_id = yt_id_match.group(1)
+                print(f"🎯 EXTRACTED YOUTUBE ID: {video_id}") # Debugging ke liye terminal mein print hoga
                 
-                # 2. Call the new 500/Day Free RapidAPI
                 rapid_url = "https://yt-api.p.rapidapi.com/video/info"
                 querystring = {"id": video_id}
                 rapid_headers = {
@@ -280,23 +280,19 @@ def get_video_info():
                     "Content-Type": "application/json"
                 }
                 
-                # Send request to API
                 res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
                 
                 if res.status_code == 200:
                     yt_data = res.json()
                     title = yt_data.get('title', 'YouTube Video')
                     
-                    # 🧹 SAFAI CHAT CHECK: Block restricted content immediately
                     if any(word in title.lower() for word in bad_words):
                         return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
                     
-                    # Extract best Thumbnail safely
                     thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
-                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list):
+                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list) and len(yt_data['thumbnail']) > 0:
                         thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
                         
-                    # Extract Formats (Audio & Video streams)
                     clean_formats = []
                     all_formats = yt_data.get('formats', [])
                     
@@ -311,17 +307,14 @@ def get_video_info():
                         quality = f.get('qualityLabel') or f.get('quality') or 'Video'
                         mimeType = f.get('mimeType', '').lower()
                         
-                        # Create friendly labels for users
                         if 'audio' in mimeType:
                             label = "Audio Only (MP3)"
                         else:
                             label = f"Video - {quality} (Direct Download)"
                             
-                        # Add to list without duplicating labels
                         if not any(d['label'] == label for d in clean_formats):
                             clean_formats.append({"label": label, "url": f_url})
                     
-                    # If we successfully grabbed the links, send them to user screen!
                     if clean_formats:
                         return jsonify({
                             "success": True, 
@@ -329,9 +322,11 @@ def get_video_info():
                             "thumbnail": thumb_url, 
                             "formats": clean_formats
                         })
+                else:
+                    print(f"❌ RapidAPI Failed! Status Code: {res.status_code}")
         except Exception as e:
-            print("RapidAPI Error:", e)
-            pass # If API fails for some reason, quietly move down to yt-dlp as a backup!
+            print("❌ RapidAPI Python Error:", e)
+            pass
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
