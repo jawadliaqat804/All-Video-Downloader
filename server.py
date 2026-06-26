@@ -259,18 +259,79 @@ def get_video_info():
             'Sec-Fetch-Mode': 'navigate'
         }
     }
-    # 1. 🔴 YOUTUBE LOGIC (NEW REVISED CLIENT BYPASS)
+    # ==========================================
+    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 NEW RAPID-API BYPASS 🔥)
+    # ==========================================
     if is_youtube:
-        # 🔥 FIX: Re-enabled cookies to fix "Sign in to confirm you're not a bot" error
-        ydl_opts['cookiefile'] = 'cookies.txt'
-        # 🔥 FIX: Simplified format to safely grab both video and audio streams
-        ydl_opts['format'] = 'best'
-        # 🔥 FIX: Updated player clients to bypass bot detection safely (iOS works best currently)
-        ydl_opts['extractor_args'] = {
-            'youtube': {
-                'player_client': ['ios', 'android', 'web']
-            }
-        }
+        try:
+            # 1. Smartly Extract YouTube Video ID from any kind of link (Shorts, youtu.be, watch?v=)
+            import re
+            yt_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', video_url)
+            
+            if yt_id_match:
+                video_id = yt_id_match.group(1)
+                
+                # 2. Call the new 500/Day Free RapidAPI
+                rapid_url = "https://yt-api.p.rapidapi.com/video/info"
+                querystring = {"id": video_id}
+                rapid_headers = {
+                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                    "x-rapidapi-host": "yt-api.p.rapidapi.com",
+                    "Content-Type": "application/json"
+                }
+                
+                # Send request to API
+                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
+                
+                if res.status_code == 200:
+                    yt_data = res.json()
+                    title = yt_data.get('title', 'YouTube Video')
+                    
+                    # 🧹 SAFAI CHAT CHECK: Block restricted content immediately
+                    if any(word in title.lower() for word in bad_words):
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                    
+                    # Extract best Thumbnail safely
+                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list):
+                        thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
+                        
+                    # Extract Formats (Audio & Video streams)
+                    clean_formats = []
+                    all_formats = yt_data.get('formats', [])
+                    
+                    if 'streamingData' in yt_data:
+                        all_formats += yt_data['streamingData'].get('formats', [])
+                        all_formats += yt_data['streamingData'].get('adaptiveFormats', [])
+                        
+                    for f in all_formats:
+                        f_url = f.get('url')
+                        if not f_url: continue
+                        
+                        quality = f.get('qualityLabel') or f.get('quality') or 'Video'
+                        mimeType = f.get('mimeType', '').lower()
+                        
+                        # Create friendly labels for users
+                        if 'audio' in mimeType:
+                            label = "Audio Only (MP3)"
+                        else:
+                            label = f"Video - {quality} (Direct Download)"
+                            
+                        # Add to list without duplicating labels
+                        if not any(d['label'] == label for d in clean_formats):
+                            clean_formats.append({"label": label, "url": f_url})
+                    
+                    # If we successfully grabbed the links, send them to user screen!
+                    if clean_formats:
+                        return jsonify({
+                            "success": True, 
+                            "title": title, 
+                            "thumbnail": thumb_url, 
+                            "formats": clean_formats
+                        })
+        except Exception as e:
+            print("RapidAPI Error:", e)
+            pass # If API fails for some reason, quietly move down to yt-dlp as a backup!
 
     # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
     elif is_facebook:
