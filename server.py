@@ -150,35 +150,84 @@ def get_video_info():
     }
     api_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
 
-    # ==========================================
-    # 🔴 LAYER 1: YOUTUBE API ONLY (صرف یوٹیوب کا بلاک)
+   # ==========================================
+    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 RAPID-API BYPASS)
     # ==========================================
     if is_youtube:
-        for endpoint in api_endpoints:
-            try:
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
+        try:
+            # 🔥 FIX: 100% Bulletproof YouTube ID Extractor
+            import re
+            video_id = None
+            if "v=" in video_url:
+                video_id = video_url.split("v=")[1][:11]
+            elif "youtu.be/" in video_url:
+                video_id = video_url.split("youtu.be/")[1][:11]
+            elif "/shorts/" in video_url:
+                video_id = video_url.split("/shorts/")[1][:11]
+            else:
+                yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
+                if yt_id_match:
+                    video_id = yt_id_match.group(1)
+
+            if video_id:
+                print(f"🎯 RAPID-API ALERT: EXTRACTED YOUTUBE ID: {video_id}") # یہ لائن اب لازمی لاگز میں آئے گی
+                
+                rapid_url = "https://yt-api.p.rapidapi.com/video/info"
+                querystring = {"id": video_id}
+                rapid_headers = {
+                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                    "x-rapidapi-host": "yt-api.p.rapidapi.com",
+                    "Content-Type": "application/json"
+                }
+                
+                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
+                
                 if res.status_code == 200:
-                    data = res.json()
-                    title = data.get('title', '').lower()
-                    if any(word in title for word in bad_words):
+                    print("✅ RAPID-API SUCCESS! DATA RECEIVED.")
+                    yt_data = res.json()
+                    title = yt_data.get('title', 'YouTube Video')
+                    
+                    if any(word in title.lower() for word in bad_words):
                         return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
                     
-                    direct_url = data.get('url')
-                    if direct_url:
-                        api_thumb = data.get('thumbnail')
-                        thumb_url = api_thumb if api_thumb else 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
-                        formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
+                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list) and len(yt_data['thumbnail']) > 0:
+                        thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
                         
-                        try:
-                            audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
-                            if audio_res.status_code == 200 and audio_res.json().get('url'):
-                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
-                        except: pass
+                    clean_formats = []
+                    all_formats = yt_data.get('formats', [])
+                    
+                    if 'streamingData' in yt_data:
+                        all_formats += yt_data['streamingData'].get('formats', [])
+                        all_formats += yt_data['streamingData'].get('adaptiveFormats', [])
                         
-                        return jsonify({"success": True, "title": title if title else "YouTube Video Ready!", "thumbnail": thumb_url, "formats": formats})
-            except Exception as e: continue
-
-
+                    for f in all_formats:
+                        f_url = f.get('url')
+                        if not f_url: continue
+                        
+                        quality = f.get('qualityLabel') or f.get('quality') or 'Video'
+                        mimeType = f.get('mimeType', '').lower()
+                        
+                        if 'audio' in mimeType:
+                            label = "Audio Only (MP3)"
+                        else:
+                            label = f"Video - {quality} (Direct Download)"
+                            
+                        if not any(d['label'] == label for d in clean_formats):
+                            clean_formats.append({"label": label, "url": f_url})
+                    
+                    if clean_formats:
+                        return jsonify({
+                            "success": True, 
+                            "title": title, 
+                            "thumbnail": thumb_url, 
+                            "formats": clean_formats
+                        })
+                else:
+                    print(f"❌ RAPID-API FAILED! API ne {res.status_code} error diya hai.")
+        except Exception as e:
+            print("❌ RAPID-API PYTHON ERROR:", e)
+            pass
 
     # ==========================================
     # 🔵 LAYER 2: FACEBOOK API ONLY (صرف فیس بک کا بلاک)
