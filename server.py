@@ -248,6 +248,7 @@ def get_video_info():
         })
 
     elif is_instagram:
+        ydl_opts['cookiefile'] = 'cookies.txt'
         ydl_opts['format'] = 'best[ext=mp4]/best'
         ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
         
