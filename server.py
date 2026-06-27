@@ -148,31 +148,11 @@ def get_video_info():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     }
     api_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
-  # 5. 🔴 YOUTUBE LOGIC (🔥 PROXY INJECTED YT-DLP)
-    elif is_youtube:
-        print("🎯 YOUTUBE: Force-starting yt-dlp with PROXY and MOBILE headers...")
-        
-        ydl_opts = {
-            'quiet': True,
-            'no_warnings': True,
-            'format': 'best',
-            # یہ یوٹیوب کی جاوا سکرپٹ پہیلی (n-challenge) کو بائی پاس کرے گا
-            'extractor_args': {'youtube': {'player_client': 'android'}},
-            'user_agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
-        }
 
-        # 🔥 پراکسی کو yt-dlp کے اندر انجیکٹ کرنے کا طریقہ
-        my_proxy = get_proxy()
-        if my_proxy:
-            # yt-dlp کو پراکسی اس فارمیٹ میں چاہیے ہوتی ہے: 'http://IP:PORT'
-            ydl_opts['proxy'] = my_proxy.get('http')
-            print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
-        else:
-            print("⚠️ NO PROXY FOUND IN LIST! Running direct connection.")
+   # ==========================================
+    # 🔵 LAYER 1: API BYPASS FOR FACEBOOK & INSTAGRAM
     # ==========================================
-    # 🔵 LAYER 2: FACEBOOK API ONLY (صرف فیس بک کا بلاک)
-    # ==========================================
-    elif is_facebook:
+    if is_facebook:
         for endpoint in api_endpoints:
             try:
                 res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
@@ -199,9 +179,6 @@ def get_video_info():
                         return jsonify({"success": True, "title": title if title else "Facebook Video Ready!", "thumbnail": thumb_url, "formats": formats})
             except Exception as e: continue
 
-    # ==========================================
-    # 🟣 LAYER 3: INSTAGRAM API ONLY (صرف انسٹاگرام کا بلاک)
-    # ==========================================
     elif is_instagram:
         for endpoint in api_endpoints:
             try:
@@ -217,7 +194,6 @@ def get_video_info():
                     
                     if direct_url:
                         api_thumb = data.get('thumbnail')
-                        # 🔥 FIX: Switched from DuckDuckGo to wsrv.nl proxy for better Instagram CDN bypass
                         import urllib.parse
                         encoded_thumb = urllib.parse.quote(api_thumb, safe='') if api_thumb else ''
                         thumb_url = f"https://wsrv.nl/?url={encoded_thumb}" if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
@@ -231,210 +207,54 @@ def get_video_info():
                         
                         return jsonify({"success": True, "title": title if title else "Instagram Video Ready!", "thumbnail": thumb_url, "formats": formats})
             except Exception as e: continue
-                
-    
+
+    # ==========================================
+    # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
+    # ==========================================
     ydl_opts = {
         'quiet': True,
         'skip_download': True, 
         'nocheckcertificate': True,
-       
-        'format': 'best', # This forces both streams to download
-        'merge_output_format': 'mp4',        # This merges them automatically
-        'cookiefile': 'cookies.txt',         # 🔥 FIX: Global Cookies for Private FB/Insta Videos
+        'merge_output_format': 'mp4',
+        'cookiefile': 'cookies.txt',
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', # 🔥 FIX: Bypass FB Parser Error
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-us,en;q=0.5',
             'Sec-Fetch-Mode': 'navigate'
         }
     }
-    # ==========================================
-    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 RAPID-API BYPASS)
-    # ==========================================
+
     if is_youtube:
-        try:
-            # 🔥 FIX: No local import here! Global 're' from line 12 will be used.
-            video_id = None
-            if "v=" in video_url:
-                video_id = video_url.split("v=")[1][:11]
-            elif "youtu.be/" in video_url:
-                video_id = video_url.split("youtu.be/")[1][:11]
-            elif "/shorts/" in video_url:
-                video_id = video_url.split("/shorts/")[1][:11]
-            else:
-                yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
-                if yt_id_match:
-                    video_id = yt_id_match.group(1)
-
-            if video_id:
-                print(f"🎯 RAPID-API ALERT: EXTRACTED YOUTUBE ID: {video_id}")
-                
-                rapid_url = "https://yt-api.p.rapidapi.com/video/info"
-                querystring = {"id": video_id}
-                rapid_headers = {
-                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
-                    "x-rapidapi-host": "yt-api.p.rapidapi.com",
-                    "Content-Type": "application/json"
-                }
-                
-                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
-                
-                if res.status_code == 200:
-                    print("✅ RAPID-API SUCCESS! DATA RECEIVED.")
-                    yt_data = res.json()
-                    title = yt_data.get('title', 'YouTube Video')
-                    
-                    if any(word in title.lower() for word in bad_words):
-                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
-                    
-                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
-                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list) and len(yt_data['thumbnail']) > 0:
-                        thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
-                        
-                    clean_formats = []
-                    all_formats = yt_data.get('formats', [])
-                    
-                    if 'streamingData' in yt_data:
-                        all_formats += yt_data['streamingData'].get('formats', [])
-                        all_formats += yt_data['streamingData'].get('adaptiveFormats', [])
-                        
-                    for f in all_formats:
-                        f_url = f.get('url')
-                        if not f_url: continue
-                        
-                        quality = f.get('qualityLabel') or f.get('quality') or 'Video'
-                        mimeType = f.get('mimeType', '').lower()
-                        
-                        if 'audio' in mimeType:
-                            label = "Audio Only (MP3)"
-                        else:
-                            label = f"Video - {quality} (Direct Download)"
-                            
-                        if not any(d['label'] == label for d in clean_formats):
-                            clean_formats.append({"label": label, "url": f_url})
-                    
-                    if clean_formats:
-                        return jsonify({
-                            "success": True, 
-                            "title": title, 
-                            "thumbnail": thumb_url, 
-                            "formats": clean_formats
-                        })
-                else:
-                    print(f"❌ RAPID-API FAILED! API ne {res.status_code} error diya hai.")
-        except Exception as e:
-            print("❌ RAPID-API PYTHON ERROR:", e)
-            pass
-        try:
-            # 🔥 FIX: Removed local 'import re' to fix the Instagram/Facebook crash!
-            # 🔥 FIX: Upgraded Regex to flawlessly catch IDs from Shorts, youtu.be, and regular links
-            yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
-            
-            if yt_id_match:
-                video_id = yt_id_match.group(1)
-                print(f"🎯 EXTRACTED YOUTUBE ID: {video_id}") # Debugging ke liye terminal mein print hoga
-                
-                rapid_url = "https://yt-api.p.rapidapi.com/video/info"
-                querystring = {"id": video_id}
-                rapid_headers = {
-                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
-                    "x-rapidapi-host": "yt-api.p.rapidapi.com",
-                    "Content-Type": "application/json"
-                }
-                
-                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
-                
-                if res.status_code == 200:
-                    yt_data = res.json()
-                    title = yt_data.get('title', 'YouTube Video')
-                    
-                    if any(word in title.lower() for word in bad_words):
-                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
-                    
-                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
-                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list) and len(yt_data['thumbnail']) > 0:
-                        thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
-                        
-                    clean_formats = []
-                    all_formats = yt_data.get('formats', [])
-                    
-                    if 'streamingData' in yt_data:
-                        all_formats += yt_data['streamingData'].get('formats', [])
-                        all_formats += yt_data['streamingData'].get('adaptiveFormats', [])
-                        
-                    for f in all_formats:
-                        f_url = f.get('url')
-                        if not f_url: continue
-                        
-                        quality = f.get('qualityLabel') or f.get('quality') or 'Video'
-                        mimeType = f.get('mimeType', '').lower()
-                        
-                        if 'audio' in mimeType:
-                            label = "Audio Only (MP3)"
-                        else:
-                            label = f"Video - {quality} (Direct Download)"
-                            
-                        if not any(d['label'] == label for d in clean_formats):
-                            clean_formats.append({"label": label, "url": f_url})
-                    
-                    if clean_formats:
-                        return jsonify({
-                            "success": True, 
-                            "title": title, 
-                            "thumbnail": thumb_url, 
-                            "formats": clean_formats
-                        })
-                else:
-                    print(f"❌ RapidAPI Failed! Status Code: {res.status_code}")
-        except Exception as e:
-            print("❌ RapidAPI Python Error:", e)
-            pass
-
-    # 1. 🔵 FACEBOOK LOGIC (🔥 NEW ADVANCED AUDIO MERGE & BYPASS)
-    elif is_facebook:
-        ydl_opts['cookiefile'] = 'cookies.txt' 
-        # 🔥 FIX: Removed strict [ext=mp4] constraints so it downloads whatever stream is actually available
+        print("🎯 YOUTUBE: Force-starting yt-dlp with PROXY and MOBILE headers...")
         ydl_opts['format'] = 'best'
-        # 🔥 FIX: Removed 'api': 'none' which was causing the "Cannot parse data" crash
-        ydl_opts['extractor_args'] = {
-            'facebook': {}
-        }
-        # Force desktop headers to bypass mobile login walls
-        ydl_opts['http_headers'].update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none'
-        })
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': 'android'}}
+        ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
 
-    # 3. 🟣 INSTAGRAM LOGIC
-    elif is_instagram:
-        ydl_opts['cookiefile'] = 'cookies.txt' 
-        ydl_opts['format'] = 'best[ext=mp4]/best'
-        ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
-        
-    # 4. ⚫ TIKTOK LOGIC 
-    elif is_tiktok:
-        ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
-        ydl_opts['format'] = 'best'
-    # 5. 🔴 YOUTUBE LOGIC (🔥 NEW YOUTUBE SMART FILTER)
-    elif is_youtube:
-        # Format fix to prevent crash
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
-        
-        # 🔥 NEW FIX 1: IP Rotation using your existing proxies to bypass Error 429
+        # 🔥 Inject Proxy from your PROXY_LIST
         my_proxy = get_proxy()
         if my_proxy:
             ydl_opts['proxy'] = my_proxy.get('http')
-            print(f"🔄 YOUTUBE IP ROTATION ACTIVE: Using Proxy {ydl_opts['proxy']}")
-            
-        # 🔥 NEW FIX 2: Bypass PO Token & JS Challenge by forcing mobile clients
-        ydl_opts['extractor_args'] = {
-            'youtube': {
-                'player_client': ['android', 'ios'] # Mobile clients bypass the n-challenge
-            }
-        }
-    # 5. ⚪ OTHER PLATFORMS
+            print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
+        else:
+            print("⚠️ NO PROXY FOUND IN LIST! Running direct connection.")
+
+    elif is_facebook:
+        ydl_opts['format'] = 'best'
+        ydl_opts['extractor_args'] = {'facebook': {}}
+        ydl_opts['http_headers'].update({
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Site': 'none'
+        })
+
+    elif is_instagram:
+        ydl_opts['format'] = 'best[ext=mp4]/best'
+        ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
+        
+    elif is_tiktok:
+        ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
+        ydl_opts['format'] = 'best'
+
     else:
         ydl_opts['format'] = 'best'
 
