@@ -148,46 +148,27 @@ def get_video_info():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     }
     api_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
+  # 5. 🔴 YOUTUBE LOGIC (🔥 PROXY INJECTED YT-DLP)
+    elif is_youtube:
+        print("🎯 YOUTUBE: Force-starting yt-dlp with PROXY and MOBILE headers...")
+        
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'format': 'best',
+            # یہ یوٹیوب کی جاوا سکرپٹ پہیلی (n-challenge) کو بائی پاس کرے گا
+            'extractor_args': {'youtube': {'player_client': 'android'}},
+            'user_agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
+        }
 
-   # ==========================================
-    # 🔴 LAYER 1: YOUTUBE API ONLY (🔥 COBALT BYPASS FOR ERROR 429)
-    # ==========================================
-    if is_youtube:
-        print("🎯 YOUTUBE REQUEST: Bypassing yt-dlp to avoid Error 429")
-        for endpoint in api_endpoints:
-            try:
-                # Send request to shared APIs (Cobalt) instead of RapidAPI or yt-dlp
-                yt_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
-                res = requests.post(endpoint, json=yt_payload, headers=api_headers, timeout=15)
-                
-                if res.status_code == 200:
-                    data = res.json()
-                    
-                    if data.get('status') == 'error':
-                        continue # Try next API if this one fails
-                        
-                    direct_url = data.get('url')
-                    if direct_url:
-                        print("✅ COBALT API SUCCESS! NO YT-DLP NEEDED.")
-                        formats = [{"label": "Video - 720p (Direct Download)", "url": direct_url}]
-                        
-                        # Try to get Audio version too
-                        try:
-                            audio_payload = {"url": video_url, "isAudioOnly": True, "filenamePattern": "classic"}
-                            audio_res = requests.post(endpoint, json=audio_payload, headers=api_headers, timeout=10)
-                            if audio_res.status_code == 200 and audio_res.json().get('url'):
-                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
-                        except: pass
-                        
-                        return jsonify({
-                            "success": True, 
-                            "title": "YouTube Video Ready!", 
-                            "thumbnail": 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png', 
-                            "formats": formats
-                        })
-            except Exception as e:
-                print("❌ API ERROR:", e)
-                continue
+        # 🔥 پراکسی کو yt-dlp کے اندر انجیکٹ کرنے کا طریقہ
+        my_proxy = get_proxy()
+        if my_proxy:
+            # yt-dlp کو پراکسی اس فارمیٹ میں چاہیے ہوتی ہے: 'http://IP:PORT'
+            ydl_opts['proxy'] = my_proxy.get('http')
+            print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
+        else:
+            print("⚠️ NO PROXY FOUND IN LIST! Running direct connection.")
     # ==========================================
     # 🔵 LAYER 2: FACEBOOK API ONLY (صرف فیس بک کا بلاک)
     # ==========================================
