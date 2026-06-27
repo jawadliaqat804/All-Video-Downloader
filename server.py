@@ -13,13 +13,12 @@ import yt_dlp
 import re
 
 # --- Proxy Rotation Setup ---
-# You can add more public proxies here or use a service like BrightData/IPRoyal
+# Updated Fresh Proxy List
 PROXY_LIST = [
-    {"http": "http://195.158.8.123:3128"},
-      {"http": "http://117.236.124.166:3128"},
-        {"http": "http://79.137.205.130:7443"},
-          {"http": "http://138.124.113.102:7443"},
-    # Add more proxies here to rotate
+    {"http": "http://163.172.187.48:80"},      # France, HIA, 50% Uptime
+    {"http": "http://52.140.3.27:3333"},       # India, HIA, 22% Uptime 
+    {"http": "http://34.84.162.206:38080"},    # Japan, HIA, 30% Uptime
+    {"http": "http://45.77.148.203:9000"},     # US, ANM, 38% Uptime
 ]
 
 import random
@@ -479,8 +478,21 @@ def get_video_info():
         ydl_opts['format'] = 'best'
     # 5. 🔴 YOUTUBE LOGIC (🔥 NEW YOUTUBE SMART FILTER)
     elif is_youtube:
-        # Smart fallback: Best Video + Best Audio merged, if not then best MP4, else basic best
+        # Format fix to prevent crash
         ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        
+        # 🔥 NEW FIX 1: IP Rotation using your existing proxies to bypass Error 429
+        my_proxy = get_proxy()
+        if my_proxy:
+            ydl_opts['proxy'] = my_proxy.get('http')
+            print(f"🔄 YOUTUBE IP ROTATION ACTIVE: Using Proxy {ydl_opts['proxy']}")
+            
+        # 🔥 NEW FIX 2: Bypass PO Token & JS Challenge by forcing mobile clients
+        ydl_opts['extractor_args'] = {
+            'youtube': {
+                'player_client': ['android', 'ios'] # Mobile clients bypass the n-challenge
+            }
+        }
     # 5. ⚪ OTHER PLATFORMS
     else:
         ydl_opts['format'] = 'best'
