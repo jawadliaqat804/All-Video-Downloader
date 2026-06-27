@@ -480,7 +480,7 @@ def get_video_info():
     # 5. 🔴 YOUTUBE LOGIC (🔥 NEW YOUTUBE SMART FILTER)
     elif is_youtube:
         # Smart fallback: Best Video + Best Audio merged, if not then best MP4, else basic best
-        ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        ydl_opts['format'] = 'bestvideo+bestaudio/best'
     # 5. ⚪ OTHER PLATFORMS
     else:
         ydl_opts['format'] = 'best'
