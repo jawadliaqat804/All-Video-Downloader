@@ -150,9 +150,57 @@ def get_video_info():
     api_payload = {"url": video_url, "vQuality": "720", "filenamePattern": "classic"}
 
    # ==========================================
-    # 🔵 LAYER 1: API BYPASS FOR FACEBOOK & INSTAGRAM
+    # 🔵 LAYER 1: API BYPASS FOR YOUTUBE, FACEBOOK & INSTAGRAM
     # ==========================================
-    if is_facebook:
+    if is_youtube:
+        try:
+            import re
+            video_id = None
+            if "v=" in video_url: video_id = video_url.split("v=")[1][:11]
+            elif "youtu.be/" in video_url: video_id = video_url.split("youtu.be/")[1][:11]
+            elif "/shorts/" in video_url: video_id = video_url.split("/shorts/")[1][:11]
+            else:
+                yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
+                if yt_id_match: video_id = yt_id_match.group(1)
+
+            if video_id:
+                print(f"🎯 RAPID-API ALERT: EXTRACTED YOUTUBE ID: {video_id}")
+                
+                rapid_url = "https://youtube138.p.rapidapi.com/video/details/"
+                querystring = {"id": video_id, "hl": "en", "gl": "US"}
+                rapid_headers = {
+                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                    "x-rapidapi-host": "youtube138.p.rapidapi.com"
+                }
+                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
+                
+                if res.status_code == 200:
+                    yt_data = res.json()
+                    title = yt_data.get('title', 'YouTube Video')
+                    
+                    if any(word in title.lower() for word in bad_words):
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                        
+                    clean_formats = []
+                    all_formats = yt_data.get('streamingData', {}).get('formats', []) + yt_data.get('streamingData', {}).get('adaptiveFormats', [])
+                    
+                    for f in all_formats:
+                        f_url = f.get('url')
+                        if not f_url: continue
+                        label = "Audio Only (MP3)" if 'audio' in f.get('mimeType', '').lower() else f"Video - {f.get('qualityLabel', 'HD')} (Direct Download)"
+                        if not any(d['label'] == label for d in clean_formats):
+                            clean_formats.append({"label": label, "url": f_url})
+                            
+                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+                    if 'thumbnails' in yt_data and len(yt_data['thumbnails']) > 0:
+                        thumb_url = yt_data['thumbnails'][-1]['url']
+                    
+                    if clean_formats:
+                        return jsonify({"success": True, "title": title, "thumbnail": thumb_url, "formats": clean_formats})
+        except Exception as e:
+            print("❌ RAPID-API (youtube138) ERROR:", e)
+
+    elif is_facebook:
         for endpoint in api_endpoints:
             try:
                 res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
@@ -182,7 +230,8 @@ def get_video_info():
     elif is_instagram:
         for endpoint in api_endpoints:
             try:
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15, proxies=get_proxy())
+                # 🔥 FIX: پراکسی ہٹا دی ہے تاکہ Cobalt API بلاک نہ ہو اور ڈائریکٹ کام کرے
+                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
                 if res.status_code == 200:
                     data = res.json()
                     title = data.get('title', '').lower()
@@ -200,6 +249,7 @@ def get_video_info():
                         formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
                         
                         try:
+                            # 🔥 FIX: آڈیو سے بھی پراکسی ہٹا دی
                             audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
                             if audio_res.status_code == 200 and audio_res.json().get('url'):
                                 formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
@@ -207,7 +257,6 @@ def get_video_info():
                         
                         return jsonify({"success": True, "title": title if title else "Instagram Video Ready!", "thumbnail": thumb_url, "formats": formats})
             except Exception as e: continue
-
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
@@ -248,7 +297,6 @@ def get_video_info():
         })
 
     elif is_instagram:
-        ydl_opts['cookiefile'] = 'cookies.txt'
         ydl_opts['format'] = 'best[ext=mp4]/best'
         ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
         
