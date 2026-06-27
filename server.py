@@ -313,6 +313,79 @@ def get_video_info():
     # ==========================================
     if is_youtube:
         try:
+            # 🔥 FIX: No local import here! Global 're' from line 12 will be used.
+            video_id = None
+            if "v=" in video_url:
+                video_id = video_url.split("v=")[1][:11]
+            elif "youtu.be/" in video_url:
+                video_id = video_url.split("youtu.be/")[1][:11]
+            elif "/shorts/" in video_url:
+                video_id = video_url.split("/shorts/")[1][:11]
+            else:
+                yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
+                if yt_id_match:
+                    video_id = yt_id_match.group(1)
+
+            if video_id:
+                print(f"🎯 RAPID-API ALERT: EXTRACTED YOUTUBE ID: {video_id}")
+                
+                rapid_url = "https://yt-api.p.rapidapi.com/video/info"
+                querystring = {"id": video_id}
+                rapid_headers = {
+                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                    "x-rapidapi-host": "yt-api.p.rapidapi.com",
+                    "Content-Type": "application/json"
+                }
+                
+                res = requests.get(rapid_url, headers=rapid_headers, params=querystring, timeout=15)
+                
+                if res.status_code == 200:
+                    print("✅ RAPID-API SUCCESS! DATA RECEIVED.")
+                    yt_data = res.json()
+                    title = yt_data.get('title', 'YouTube Video')
+                    
+                    if any(word in title.lower() for word in bad_words):
+                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                    
+                    thumb_url = 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png'
+                    if 'thumbnail' in yt_data and isinstance(yt_data['thumbnail'], list) and len(yt_data['thumbnail']) > 0:
+                        thumb_url = yt_data['thumbnail'][-1].get('url', thumb_url)
+                        
+                    clean_formats = []
+                    all_formats = yt_data.get('formats', [])
+                    
+                    if 'streamingData' in yt_data:
+                        all_formats += yt_data['streamingData'].get('formats', [])
+                        all_formats += yt_data['streamingData'].get('adaptiveFormats', [])
+                        
+                    for f in all_formats:
+                        f_url = f.get('url')
+                        if not f_url: continue
+                        
+                        quality = f.get('qualityLabel') or f.get('quality') or 'Video'
+                        mimeType = f.get('mimeType', '').lower()
+                        
+                        if 'audio' in mimeType:
+                            label = "Audio Only (MP3)"
+                        else:
+                            label = f"Video - {quality} (Direct Download)"
+                            
+                        if not any(d['label'] == label for d in clean_formats):
+                            clean_formats.append({"label": label, "url": f_url})
+                    
+                    if clean_formats:
+                        return jsonify({
+                            "success": True, 
+                            "title": title, 
+                            "thumbnail": thumb_url, 
+                            "formats": clean_formats
+                        })
+                else:
+                    print(f"❌ RAPID-API FAILED! API ne {res.status_code} error diya hai.")
+        except Exception as e:
+            print("❌ RAPID-API PYTHON ERROR:", e)
+            pass
+        try:
             # 🔥 FIX: Removed local 'import re' to fix the Instagram/Facebook crash!
             # 🔥 FIX: Upgraded Regex to flawlessly catch IDs from Shorts, youtu.be, and regular links
             yt_id_match = re.search(r'(?:v=|\/shorts\/|\.be\/|\/)([0-9A-Za-z_-]{11})', video_url)
