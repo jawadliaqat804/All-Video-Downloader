@@ -302,7 +302,8 @@ def get_video_info():
     elif is_instagram:
         ydl_opts['cookiefile'] = 'cookies.txt'
         ydl_opts['format'] = 'best[ext=mp4]/best'
-        ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
+        # 🔥 FIX: Added 'api': 'graphql' to fix empty media response
+        ydl_opts['extractor_args'] = {'instagram': {'api': 'graphql', 'query_comment_count': 0}}
         
     elif is_tiktok:
         ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
@@ -461,9 +462,22 @@ def get_video_info():
             })
     except Exception as e:
         error_msg = str(e)
-        if "Empty media response" in error_msg or "Private video" in error_msg:
-            return jsonify({"error": "System Alert: Instagram Privacy Block! This video is private or restricted by Instagram. Please try a public reel."}), 400
-        return jsonify({"error": error_msg}), 500
+        print(f"❌ YT-DLP ERROR CAUGHT: {error_msg}")
+        
+        # 1. Instagram & Privacy Block
+        if "Empty media response" in error_msg or "Private video" in error_msg or "login" in error_msg.lower():
+            return jsonify({"error": "System Alert: Video is private or restricted by the platform. Please try a public video."}), 400
+            
+        # 2. YouTube Proxy Timeout Error (Fix for your logs)
+        elif "Read timed out" in error_msg or "ConnectTimeout" in error_msg or "Timeout" in error_msg:
+            return jsonify({"error": "Network Timeout: The proxy server is slow or blocked right now. Please try again in a few seconds."}), 400
+            
+        # 3. YouTube 429 Too Many Requests Error
+        elif "Too Many Requests" in error_msg or "429" in error_msg:
+            return jsonify({"error": "Server Overloaded: YouTube temporarily blocked our IP. Please try again after 2 minutes."}), 400
+            
+        # 4. Catch all other errors safely without crashing the server
+        return jsonify({"error": f"Extraction Failed: {error_msg}"}), 400
 
 def process_compression(job_id, video_url):
     # Set status to processing
