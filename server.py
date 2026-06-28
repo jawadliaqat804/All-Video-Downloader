@@ -11,21 +11,20 @@ from flask import Flask, request, jsonify, Response, stream_with_context, render
 from flask_cors import CORS
 import yt_dlp
 import re
-
-# --- Proxy Rotation Setup ---
-# Updated Fresh Proxy List
-PROXY_LIST = [
-    {"http": "http://163.172.187.48:80"},      # France, HIA, 50% Uptime
-    {"http": "http://52.140.3.27:3333"},       # India, HIA, 22% Uptime 
-    {"http": "http://34.84.162.206:38080"},    # Japan, HIA, 30% Uptime
-    {"http": "http://45.77.148.203:9000"},     # US, ANM, 38% Uptime
-]
-
 import random
 
+# --- Updated Proxy Setup (Corrected) ---
+PROXY_LIST = [
+    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.1.109:3129"},
+    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@209.50.168.63:3129"},
+    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.11.239:3129"},
+    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@216.26.245.43:3129"}
+]
+
 def get_proxy():
-    # If PROXY_LIST is empty, returns None (Direct connection)
-    return random.choice(PROXY_LIST) if PROXY_LIST else None
+    # Selects a random proxy and returns it in dictionary format
+    p = random.choice(PROXY_LIST)
+    return {"http": p, "https": p}
 
 # Configure Flask to look for templates in the current root directory (.)
 app = Flask(__name__, template_folder=".")
@@ -228,35 +227,46 @@ def get_video_info():
             except Exception as e: continue
 
     elif is_instagram:
-        for endpoint in api_endpoints:
-            try:
-                # 🔥 FIX: پراکسی ہٹا دی ہے تاکہ Cobalt API بلاک نہ ہو اور ڈائریکٹ کام کرے
-                res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
-                if res.status_code == 200:
-                    data = res.json()
-                    title = data.get('title', '').lower()
-                    if any(word in title for word in bad_words):
-                        return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
-                    
-                    direct_url = data.get('url')
-                    if not direct_url and data.get('picker'): direct_url = data.get('picker')[0].get('url')
-                    
-                    if direct_url:
-                        api_thumb = data.get('thumbnail')
-                        import urllib.parse
-                        encoded_thumb = urllib.parse.quote(api_thumb, safe='') if api_thumb else ''
-                        thumb_url = f"https://wsrv.nl/?url={encoded_thumb}" if api_thumb else 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
-                        formats = [{"label": "Video (720p/1080p) - Fast Download", "url": direct_url}]
-                        
-                        try:
-                            # 🔥 FIX: آڈیو سے بھی پراکسی ہٹا دی
-                            audio_res = requests.post(endpoint, json={"url": video_url, "isAudioOnly": True}, headers=api_headers, timeout=10)
-                            if audio_res.status_code == 200 and audio_res.json().get('url'):
-                                formats.append({"label": "Audio Only (MP3)", "url": audio_res.json().get('url')})
-                        except: pass
-                        
-                        return jsonify({"success": True, "title": title if title else "Instagram Video Ready!", "thumbnail": thumb_url, "formats": formats})
-            except Exception as e: continue
+        try:
+            print(f"🎯 RAPID-API Instagram ALERT: Fetching for URL: {video_url}")
+            
+            # 🚀 Your exact RapidAPI code integrated here
+            api_url = "https://instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com/convert"
+            querystring = {"url": video_url}
+            api_headers = {
+                "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                "x-rapidapi-host": "instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com"
+            }
+            
+            res = requests.get(api_url, headers=api_headers, params=querystring, timeout=15)
+            
+            if res.status_code == 200:
+                insta_data = res.json()
+                print("🔍 INSTA API RESPONSE:", insta_data) # Jasoos line to check what API is sending
+                
+                direct_url = None
+                title = "Instagram Reel Ready!"
+                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+                
+                # API data reading logic (handles both list and dict responses)
+                if isinstance(insta_data, list) and len(insta_data) > 0:
+                    direct_url = insta_data[0].get('url') or insta_data[0].get('download_url')
+                    title = insta_data[0].get('title', title)
+                    thumb_url = insta_data[0].get('thumbnail', thumb_url)
+                elif isinstance(insta_data, dict):
+                    direct_url = insta_data.get('url') or insta_data.get('video_url') or insta_data.get('download_url')
+                    title = insta_data.get('title') or insta_data.get('caption', title)
+                    thumb_url = insta_data.get('thumbnail') or insta_data.get('cover', thumb_url)
+                
+                # Check bad words in title (Safai Chat Rules)
+                if any(word in title.lower() for word in bad_words):
+                    return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+                
+                if direct_url:
+                    formats = [{"label": "Video (HD/MP4) - Fast Download", "url": direct_url}]
+                    return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
+        except Exception as e:
+            print("❌ RAPID-API (Instagram) ERROR:", e)
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
