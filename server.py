@@ -14,11 +14,12 @@ import re
 import random
 
 # --- Updated Proxy Setup (Corrected) ---
+# Removed the dictionary format here because get_proxy() already adds it
 PROXY_LIST = [
-    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.1.109:3129"},
-    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@209.50.168.63:3129"},
-    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.11.239:3129"},
-    {"http": "http://9o1465l0o03n:6b6ebem5jr553oi5@216.26.245.43:3129"}
+    "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.1.109:3129",
+    "http://9o1465l0o03n:6b6ebem5jr553oi5@209.50.168.63:3129",
+    "http://9o1465l0o03n:6b6ebem5jr553oi5@65.111.11.239:3129",
+    "http://9o1465l0o03n:6b6ebem5jr553oi5@216.26.245.43:3129"
 ]
 
 def get_proxy():
