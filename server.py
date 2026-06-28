@@ -289,14 +289,18 @@ def get_video_info():
             print("⚠️ NO PROXY FOUND IN LIST! Running direct connection.")
 
     elif is_facebook:
+        ydl_opts['cookiefile'] = 'cookies.txt'
         ydl_opts['format'] = 'best'
         ydl_opts['extractor_args'] = {'facebook': {}}
         ydl_opts['http_headers'].update({
             'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Site': 'none'
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1'
         })
 
     elif is_instagram:
+        ydl_opts['cookiefile'] = 'cookies.txt'
         ydl_opts['format'] = 'best[ext=mp4]/best'
         ydl_opts['extractor_args'] = {'instagram': {'query_comment_count': 0}}
         

@@ -38,6 +38,10 @@ processBtn.addEventListener('click', (e) => {
     }
 
    processBtn.innerText = "Checking Content...";
+ // 1. Show the ad modal immediately when the process starts
+    document.getElementById('mini-ad-modal').style.display = 'block';
+
+    console.log("Checking content...");
   
 
     // --- RESET UI (Logic 6: Hide and clear old data immediately after click) ---
@@ -77,13 +81,16 @@ processBtn.addEventListener('click', (e) => {
             if (data.error) {
             showCustomAlert("System Alert:\n\n" + data.error);
             processBtn.innerText = "Download Video";
-            
+             // Hide the ad modal once the video data is successfully retrieved
+         if (adModal) adModal.style.display = 'none';
             return;
         }
 
         // If Python gives the green light, show download buttons
         downloadOptions.classList.remove('hidden');
         processBtn.innerText = "Video Found!";
+        // Hide the ad modal once the video data is successfully retrieved
+         if (adModal) adModal.style.display = 'none';
         
       // --- LOGIC 6: Professional ID Targeting ---
         const thumbnailImage = document.getElementById('video-thumbnail');
@@ -218,6 +225,8 @@ progText.innerText = `${progress}% - Preparing Video...`;
     .catch(error => {
         showCustomAlert("Server Error! Please make sure your Python server is running.");
         processBtn.innerText = "Download Video";
+      // Hide the ad modal once the video data is successfully retrieved
+if (adModal) adModal.style.display = 'none';
     });
 });
 
