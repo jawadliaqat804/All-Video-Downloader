@@ -1,4 +1,5 @@
 // DOM Elements
+const adModal = document.getElementById('mini-ad-modal');
 const themeToggleBtn = document.getElementById('theme-toggle');
 const processBtn = document.getElementById('process-btn');
 const downloadOptions = document.getElementById('download-options');
@@ -82,7 +83,7 @@ processBtn.addEventListener('click', (e) => {
             showCustomAlert("System Alert:\n\n" + data.error);
             processBtn.innerText = "Download Video";
              // Hide the ad modal once the video data is successfully retrieved
-         if (adModal) adModal.style.display = 'none';
+         document.getElementById('mini-ad-modal').style.display = 'none';
             return;
         }
 
@@ -90,7 +91,7 @@ processBtn.addEventListener('click', (e) => {
         downloadOptions.classList.remove('hidden');
         processBtn.innerText = "Video Found!";
         // Hide the ad modal once the video data is successfully retrieved
-         if (adModal) adModal.style.display = 'none';
+         document.getElementById('mini-ad-modal').style.display = 'none';
         
       // --- LOGIC 6: Professional ID Targeting ---
         const thumbnailImage = document.getElementById('video-thumbnail');
@@ -226,7 +227,7 @@ progText.innerText = `${progress}% - Preparing Video...`;
         showCustomAlert("Server Error! Please make sure your Python server is running.");
         processBtn.innerText = "Download Video";
       // Hide the ad modal once the video data is successfully retrieved
-if (adModal) adModal.style.display = 'none';
+document.getElementById('mini-ad-modal').style.display = 'none';
     });
 });
 
