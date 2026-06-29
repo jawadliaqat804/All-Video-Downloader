@@ -247,46 +247,57 @@ def get_video_info():
 
     elif is_instagram:
         try:
-            print(f"🎯 RAPID-API Instagram ALERT: Fetching for URL: {video_url}")
+            print(f"🎯 INSTAGRAM DOUBLE-LAYER ALERT: Fetching URL: {video_url}")
+            direct_url = None
+            title = "Instagram Reel Ready!"
+            thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+
+            # 🟢 LAYER 1: COBALT API (Primary Free Bypass for URLs)
+            for endpoint in api_endpoints:
+                try:
+                    res = requests.post(endpoint, json={"url": video_url, "vQuality": "720"}, headers=api_headers, timeout=10)
+                    if res.status_code == 200:
+                        data = res.json()
+                        if data.get('url'):
+                            direct_url = data.get('url')
+                            title = data.get('title', title)
+                            print("✅ Instagram video found via Cobalt API!")
+                            break
+                except:
+                    continue
+
+            # 🔵 LAYER 2: YOUR NEW RAPID-API (Fallback if Cobalt is busy)
+            if not direct_url:
+                print("🔄 Cobalt busy. Switching to RapidAPI Fallback...")
+                # Using the standard URL payload for your specific RapidAPI
+                rapid_url = "https://instagram120.p.rapidapi.com/api/instagram/links"
+                payload = {"url": video_url}
+                rapid_headers = {
+                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
+                    "x-rapidapi-host": "instagram120.p.rapidapi.com",
+                    "Content-Type": "application/json"
+                }
+                res = requests.post(rapid_url, json=payload, headers=rapid_headers, timeout=15)
+                if res.status_code == 200:
+                    insta_data = res.json()
+                    # Parse data dynamically (handles both list or dict responses)
+                    if isinstance(insta_data, list) and len(insta_data) > 0:
+                        direct_url = insta_data[0].get('url') or insta_data[0].get('download_url')
+                    elif isinstance(insta_data, dict):
+                        direct_url = insta_data.get('url') or insta_data.get('video_url') or insta_data.get('download_url')
+                        title = insta_data.get('title') or title
+
+            # 🧹 SAFAI CHAT CHECK
+            if any(word in title.lower() for word in bad_words):
+                return jsonify({"error": "System Alert: Restricted Content Blocked! (againist islamic guidelines)"})
+
+            # ✅ FINAL SUCCESS RESPONSE
+            if direct_url:
+                formats = [{"label": "Video (HD) - Fast Download", "url": direct_url}]
+                return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
             
-            # 🚀 Your exact RapidAPI code integrated here
-            api_url = "https://instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com/convert"
-            querystring = {"url": video_url}
-            api_headers = {
-                "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
-                "x-rapidapi-host": "instagram-downloader-download-instagram-stories-videos4.p.rapidapi.com"
-            }
-            
-            res = requests.get(api_url, headers=api_headers, params=querystring, timeout=15)
-            
-            if res.status_code == 200:
-                insta_data = res.json()
-                print("🔍 INSTA API RESPONSE:", insta_data) # Jasoos line to check what API is sending
-                
-                direct_url = None
-                title = "Instagram Reel Ready!"
-                thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
-                
-                # API data reading logic (handles both list and dict responses)
-                if isinstance(insta_data, list) and len(insta_data) > 0:
-                    direct_url = insta_data[0].get('url') or insta_data[0].get('download_url')
-                    title = insta_data[0].get('title', title)
-                    thumb_url = insta_data[0].get('thumbnail', thumb_url)
-                elif isinstance(insta_data, dict):
-                    direct_url = insta_data.get('url') or insta_data.get('video_url') or insta_data.get('download_url')
-                    title = insta_data.get('title') or insta_data.get('caption', title)
-                    thumb_url = insta_data.get('thumbnail') or insta_data.get('cover', thumb_url)
-                
-                # Check bad words in title (Safai Chat Rules)
-                if any(word in title.lower() for word in bad_words):
-                    return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
-                
-                if direct_url:
-                    formats = [{"label": "Video (HD/MP4) - Fast Download", "url": direct_url}]
-                    return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
         except Exception as e:
-            print("❌ RAPID-API (Instagram) ERROR:", e)
-            print("🔄 Trying Cobalt API fallback for Instagram...")
+            print("❌ INSTAGRAM API LAYER ERROR:", e)
             # Fallback layer to bypass Instagram login restriction using Cobalt endpoints
             for endpoint in api_endpoints:
                 try:
