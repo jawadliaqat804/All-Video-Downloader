@@ -345,11 +345,7 @@ def get_video_info():
             'Upgrade-Insecure-Requests': '1'
         })
 
-    elif is_instagram:
-        ydl_opts['cookiefile'] = 'cookies.txt'
-        ydl_opts['format'] = 'best[ext=mp4]/best'
-        # 🔥 FIX: Added 'api': 'graphql' to fix empty media response
-        ydl_opts['extractor_args'] = {'instagram': {'api': 'graphql', 'query_comment_count': 0}}
+    
         
     elif is_tiktok:
         ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
