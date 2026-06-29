@@ -266,7 +266,7 @@ def get_video_info():
                 except:
                     continue
 
-            # 🔵 LAYER 2: YOUR NEW RAPID-API (Fallback if Cobalt is busy)
+            # 🔵 LAYER 2: YOUR NEW RAPID-API (Fallback if Cobalt is busy or fails)
             if not direct_url:
                 print("🔄 Cobalt busy. Switching to RapidAPI Fallback...")
                 # Using the standard URL payload for your specific RapidAPI
@@ -287,32 +287,21 @@ def get_video_info():
                         direct_url = insta_data.get('url') or insta_data.get('video_url') or insta_data.get('download_url')
                         title = insta_data.get('title') or title
 
-            # 🧹 SAFAI CHAT CHECK
+            # 🧹 SAFAI CHAT CHECK: Block restricted content based on Islamic guidelines
             if any(word in title.lower() for word in bad_words):
-                return jsonify({"error": "System Alert: Restricted Content Blocked! (againist islamic guidelines)"})
+                return jsonify({"error": "System Alert: Restricted Content Blocked! (against islamic guidelines)"})
 
             # ✅ FINAL SUCCESS RESPONSE
             if direct_url:
                 formats = [{"label": "Video (HD) - Fast Download", "url": direct_url}]
                 return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
-            
+            else:
+                # If both Layer 1 and Layer 2 fail to fetch the video
+                return jsonify({"error": "System Alert: Video is private or platform requires login. Please try a public video."}), 400
+
         except Exception as e:
             print("❌ INSTAGRAM API LAYER ERROR:", e)
-            # Fallback layer to bypass Instagram login restriction using Cobalt endpoints
-            for endpoint in api_endpoints:
-                try:
-                    res = requests.post(endpoint, json={"url": video_url, "vQuality": "720"}, headers=api_headers, timeout=10)
-                    if res.status_code == 200:
-                        data = res.json()
-                        if data.get('url'):
-                            return jsonify({
-                                "success": True,
-                                "title": data.get('title', 'Instagram Reel'),
-                                "thumbnail": 'https://cdn-icons-png.flaticon.com/512/174/174855.png',
-                                "formats": [{"label": "Video (HD) - Server Bypass", "url": data.get('url')}]
-                            })
-                except:
-                    continue
+            return jsonify({"error": "Instagram service is busy, please try again."}), 400
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
