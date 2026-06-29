@@ -201,6 +201,22 @@ def get_video_info():
                         return jsonify({"success": True, "title": title, "thumbnail": thumb_url, "formats": clean_formats})
         except Exception as e:
             print("❌ RAPID-API (youtube138) ERROR:", e)
+            print("🔄 Trying Cobalt API fallback for YouTube...")
+            # Fallback layer to bypass Render IP 429 block using Cobalt endpoints
+            for endpoint in api_endpoints:
+                try:
+                    res = requests.post(endpoint, json={"url": video_url, "vQuality": "720"}, headers=api_headers, timeout=10)
+                    if res.status_code == 200:
+                        data = res.json()
+                        if data.get('url'):
+                            return jsonify({
+                                "success": True,
+                                "title": data.get('title', 'YouTube Video'),
+                                "thumbnail": 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png',
+                                "formats": [{"label": "Video (720p) - Server Bypass", "url": data.get('url')}]
+                            })
+                except:
+                    continue
 
     elif is_facebook:
         for endpoint in api_endpoints:
@@ -270,6 +286,22 @@ def get_video_info():
                     return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
         except Exception as e:
             print("❌ RAPID-API (Instagram) ERROR:", e)
+            print("🔄 Trying Cobalt API fallback for Instagram...")
+            # Fallback layer to bypass Instagram login restriction using Cobalt endpoints
+            for endpoint in api_endpoints:
+                try:
+                    res = requests.post(endpoint, json={"url": video_url, "vQuality": "720"}, headers=api_headers, timeout=10)
+                    if res.status_code == 200:
+                        data = res.json()
+                        if data.get('url'):
+                            return jsonify({
+                                "success": True,
+                                "title": data.get('title', 'Instagram Reel'),
+                                "thumbnail": 'https://cdn-icons-png.flaticon.com/512/174/174855.png',
+                                "formats": [{"label": "Video (HD) - Server Bypass", "url": data.get('url')}]
+                            })
+                except:
+                    continue
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
@@ -290,7 +322,7 @@ def get_video_info():
     if is_youtube:
         print("🎯 YOUTUBE: Force-starting yt-dlp with PROXY and MOBILE headers...")
         ydl_opts['format'] = 'best'
-        ydl_opts['extractor_args'] = {'youtube': {'player_client': 'android'}}
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android']}}
         ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
 
         # 🔥 Inject Proxy from your PROXY_LIST
