@@ -246,62 +246,36 @@ def get_video_info():
             except Exception as e: continue
 
     elif is_instagram:
+        print(f"🎯 INSTAGRAM DIRECT PATCH: Fetching URL: {video_url}")
         try:
-            print(f"🎯 INSTAGRAM DOUBLE-LAYER ALERT: Fetching URL: {video_url}")
-            direct_url = None
-            title = "Instagram Reel Ready!"
-            thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'cookiefile': 'cookies.txt'
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+                
+                # Check for video URL
+                direct_url = info.get('url') or (info.get('requested_formats')[-1].get('url') if info.get('requested_formats') else None)
+                title = info.get('title') or "Instagram Reel"
+                
+                # Bad words check
+                if any(word in title.lower() for word in bad_words):
+                    return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
 
-            # 🟢 LAYER 1: COBALT API (Primary Free Bypass for URLs)
-            for endpoint in api_endpoints:
-                try:
-                    res = requests.post(endpoint, json={"url": video_url, "vQuality": "720"}, headers=api_headers, timeout=10)
-                    if res.status_code == 200:
-                        data = res.json()
-                        if data.get('url'):
-                            direct_url = data.get('url')
-                            title = data.get('title', title)
-                            print("✅ Instagram video found via Cobalt API!")
-                            break
-                except:
-                    continue
-
-            # 🔵 LAYER 2: YOUR NEW RAPID-API (Fallback if Cobalt is busy or fails)
-            if not direct_url:
-                print("🔄 Cobalt busy. Switching to RapidAPI Fallback...")
-                # Using the standard URL payload for your specific RapidAPI
-                rapid_url = "https://instagram120.p.rapidapi.com/api/instagram/links"
-                payload = {"url": video_url}
-                rapid_headers = {
-                    "x-rapidapi-key": "095de3a4b8mshaa3f96983077ee0p10f23ejsn3320116b82dc",
-                    "x-rapidapi-host": "instagram120.p.rapidapi.com",
-                    "Content-Type": "application/json"
-                }
-                res = requests.post(rapid_url, json=payload, headers=rapid_headers, timeout=15)
-                if res.status_code == 200:
-                    insta_data = res.json()
-                    # Parse data dynamically (handles both list or dict responses)
-                    if isinstance(insta_data, list) and len(insta_data) > 0:
-                        direct_url = insta_data[0].get('url') or insta_data[0].get('download_url')
-                    elif isinstance(insta_data, dict):
-                        direct_url = insta_data.get('url') or insta_data.get('video_url') or insta_data.get('download_url')
-                        title = insta_data.get('title') or title
-
-            # 🧹 SAFAI CHAT CHECK: Block restricted content based on Islamic guidelines
-            if any(word in title.lower() for word in bad_words):
-                return jsonify({"error": "System Alert: Restricted Content Blocked! (against islamic guidelines)"})
-
-            # ✅ FINAL SUCCESS RESPONSE
-            if direct_url:
-                formats = [{"label": "Video (HD) - Fast Download", "url": direct_url}]
-                return jsonify({"success": True, "title": title[:50] + "...", "thumbnail": thumb_url, "formats": formats})
-            else:
-                # If both Layer 1 and Layer 2 fail to fetch the video
-                return jsonify({"error": "System Alert: Video is private or platform requires login. Please try a public video."}), 400
-
+                if direct_url:
+                    return jsonify({
+                        "success": True, 
+                        "title": title[:50], 
+                        "thumbnail": info.get('thumbnail', 'https://cdn-icons-png.flaticon.com/512/174/174855.png'),
+                        "formats": [{"label": "Video (HD) - Fast Download", "url": direct_url}]
+                    })
+                else:
+                    raise Exception("No URL found")
         except Exception as e:
-            print("❌ INSTAGRAM API LAYER ERROR:", e)
-            return jsonify({"error": "Instagram service is busy, please try again."}), 400
+            print(f"❌ INSTAGRAM YT-DLP ERROR: {e}")
+            return jsonify({"error": "System Alert: Could not fetch video. It might be private or cookies expired."}), 400
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
