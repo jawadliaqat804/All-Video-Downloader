@@ -89,7 +89,8 @@ def get_video_info():
     if 'tiktok.com' in video_url.lower():
         try:
             api_url = f"https://www.tikwm.com/api/?url={video_url}"
-            res = requests.get(api_url).json()
+            # FIX 1: Added timeout=10 to prevent server hang
+            res = requests.get(api_url, timeout=10).json()
             
             if res.get('code') == 0:
                 tk_data = res.get('data', {})
@@ -128,7 +129,8 @@ def get_video_info():
             else:
                 return jsonify({"error": "TikTok API Failed. Video might be private."}), 400
         except Exception as e:
-            return jsonify({"error": f"TikTok API Error: {str(e)}"}), 500
+            # FIX 1.1: Changed 500 to 400 so frontend shows correct error
+            return jsonify({"error": f"TikTok API is busy or failed. Error: {str(e)}"}), 400
        # 🛡️ PROTECTIVE SHIELD: THE "API MAGIC" LAYER
     # Identifying the platform
     is_youtube = 'youtube.com' in video_url.lower() or 'youtu.be' in video_url.lower()
@@ -154,7 +156,7 @@ def get_video_info():
     # ==========================================
     if is_youtube:
         try:
-            import re
+            
             video_id = None
             if "v=" in video_url: video_id = video_url.split("v=")[1][:11]
             elif "youtu.be/" in video_url: video_id = video_url.split("youtu.be/")[1][:11]
@@ -292,12 +294,13 @@ def get_video_info():
         ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
 
         # 🔥 Inject Proxy from your PROXY_LIST
-        my_proxy = get_proxy()
-        if my_proxy:
-            ydl_opts['proxy'] = my_proxy.get('http')
-            print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
-        else:
-            print("⚠️ NO PROXY FOUND IN LIST! Running direct connection.")
+        # FIX 3: Disabled proxy injection temporarily because proxies are returning 407 Error
+        # my_proxy = get_proxy()
+        # if my_proxy:
+        #     ydl_opts['proxy'] = my_proxy.get('http')
+        #     print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
+        # else:
+        print("⚠️ PROXY DISABLED TO PREVENT 407 ERROR! Running direct connection.")
 
     elif is_facebook:
         ydl_opts['cookiefile'] = 'cookies.txt'
@@ -475,9 +478,12 @@ def get_video_info():
         error_msg = str(e)
         print(f"❌ YT-DLP ERROR CAUGHT: {error_msg}")
         
+        # FIX 4: Converted error_msg to lower case for accurate checking
+        error_msg_lower = error_msg.lower()
+        
         # 1. Instagram & Privacy Block
-        if "Empty media response" in error_msg or "Private video" in error_msg or "login" in error_msg.lower():
-            return jsonify({"error": "System Alert: Video is private or restricted by the platform. Please try a public video."}), 400
+        if "empty media response" in error_msg_lower or "private video" in error_msg_lower or "login" in error_msg_lower:
+            return jsonify({"error": "System Alert: Video is private or platform requires login (Instagram/FB). Please try a public video."}), 400
             
         # 2. YouTube Proxy Timeout Error (Fix for your logs)
         elif "Read timed out" in error_msg or "ConnectTimeout" in error_msg or "Timeout" in error_msg:
