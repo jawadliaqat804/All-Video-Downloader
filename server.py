@@ -246,36 +246,53 @@ def get_video_info():
             except Exception as e: continue
 
     elif is_instagram:
-        print(f"🎯 INSTAGRAM DIRECT PATCH: Fetching URL: {video_url}")
         try:
-            ydl_opts = {
-                'quiet': True,
-                'no_warnings': True,
-                'cookiefile': 'cookies.txt'
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(video_url, download=False)
-                
-                # Check for video URL
-                direct_url = info.get('url') or (info.get('requested_formats')[-1].get('url') if info.get('requested_formats') else None)
-                title = info.get('title') or "Instagram Reel"
-                
-                # Bad words check
-                if any(word in title.lower() for word in bad_words):
-                    return jsonify({"error": "System Alert: Restricted Content Blocked! (Safai Chat Rules)"})
+            # INSTAGRAM FIX: Check Cobalt API, but reject .m3u8 to prevent black screen!
+            print(f"🎯 INSTAGRAM API LAYER: Fetching URL: {video_url}")
+            title = "Instagram Reel Ready!"
+            thumb_url = 'https://cdn-icons-png.flaticon.com/512/174/174855.png'
 
-                if direct_url:
-                    return jsonify({
-                        "success": True, 
-                        "title": title[:50], 
-                        "thumbnail": info.get('thumbnail', 'https://cdn-icons-png.flaticon.com/512/174/174855.png'),
-                        "formats": [{"label": "Video (HD) - Fast Download", "url": direct_url}]
-                    })
-                else:
-                    raise Exception("No URL found")
+            direct_url = None
+            
+            # Loop through your existing shared APIs
+            for endpoint in api_endpoints:
+                try:
+                    res = requests.post(endpoint, json=api_payload, headers=api_headers, timeout=15)
+                    if res.status_code == 200:
+                        data = res.json()
+                        temp_url = data.get('url')
+                        
+                        if not temp_url and data.get('picker'):
+                            temp_url = data.get('picker')[0].get('url')
+                            
+                        if temp_url:
+                            # 🔥 NEW: STRICT BLACK SCREEN SHIELD
+                            if '.m3u8' in temp_url.lower():
+                                print("⚠️ Cobalt returned m3u8 (Black Screen Risk!). Skipping API...")
+                                direct_url = None
+                            else:
+                                direct_url = temp_url
+                                break  # Successfully found an MP4 video, stop the loop
+                except:
+                    continue
+            
+            # If we successfully got a direct MP4, send it!
+            if direct_url:
+                if any(word in title.lower() for word in bad_words):
+                    return jsonify({"error": "System Alert: Restricted Content Blocked! (against islamic guidelines)"})
+
+                formats = [
+                    {"label": "Video (HD) - Fast Download", "url": direct_url}
+                ]
+                return jsonify({"success": True, "title": title, "thumbnail": thumb_url, "formats": formats})
+            else:
+                # 🔥 NEW: If Cobalt fails or gives m3u8, DO NOT return an error! 
+                # Let Python naturally fall down to LAYER 2 (yt-dlp) to handle it properly.
+                print("🔄 API failed or returned bad format. Moving to LAYER 2 (yt-dlp)...")
+
         except Exception as e:
-            print(f"❌ INSTAGRAM YT-DLP ERROR: {e}")
-            return jsonify({"error": "System Alert: Could not fetch video. It might be private or cookies expired."}), 400
+            print("❌ INSTAGRAM LAYER ERROR:", e)
+            print("🔄 Falling back to LAYER 2...")
     # ==========================================
     # 🔴 LAYER 2: YT-DLP CONFIGURATIONS 
     # ==========================================
@@ -320,6 +337,12 @@ def get_video_info():
         })
 
     
+    elif is_instagram:
+        print("🎯 INSTAGRAM: LAYER 2 Active with Cookies!")
+        # 🔥 FIX: Force yt-dlp to extract strictly mp4 format to bypass the audio-only/black screen bug
+        ydl_opts['format'] = 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best' 
+        ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+
         
     elif is_tiktok:
         ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
