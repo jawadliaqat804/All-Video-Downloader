@@ -311,18 +311,14 @@ def get_video_info():
     }
 
     if is_youtube:
-        print("🎯 YOUTUBE: Force-starting yt-dlp with PROXY and MOBILE headers...")
+        # 🎯 YOUTUBE FIX: Bypass 429 error and removed blocked android client
+        print("🎯 YOUTUBE: Updating yt-dlp settings to bypass 429 Block...")
         ydl_opts['format'] = 'best'
-        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['android']}}
-        ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'
-
-        # 🔥 Inject Proxy from your PROXY_LIST
-        # FIX 3: Disabled proxy injection temporarily because proxies are returning 407 Error
-        # my_proxy = get_proxy()
-        # if my_proxy:
-        #     ydl_opts['proxy'] = my_proxy.get('http')
-        #     print(f"🔄 YT-DLP PROXY INJECTED: {ydl_opts['proxy']}")
-        # else:
+        # Fallback to default web clients instead of android
+        ydl_opts['extractor_args'] = {'youtube': {'player_client': ['web', 'mweb']}}
+        # Set standard Desktop User-Agent instead of Mobile
+        ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+        
         print("⚠️ PROXY DISABLED TO PREVENT 407 ERROR! Running direct connection.")
 
     elif is_facebook:
@@ -343,7 +339,7 @@ def get_video_info():
         ydl_opts['format'] = 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best' 
         ydl_opts['http_headers']['User-Agent'] = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
 
-        
+
     elif is_tiktok:
         ydl_opts['http_headers']['Referer'] = 'https://www.tiktok.com/'
         ydl_opts['format'] = 'best'
